@@ -1,0 +1,85 @@
+/* ══════════════════════════════════════════════
+   MASTER THEME TOKENS — Default: Warm Neutral
+══════════════════════════════════════════════ */
+:root {
+  --bg-a: #FAF8F4;
+  --bg-b: #F0EDE6;
+  --text-hi: #2a2018;
+  --text-lo: #786858;
+  --border: rgba(0, 0, 0, 0.07);
+  --accent: #038492;
+  --accent-soft: rgba(3, 132, 146, 0.12);
+  --now: #038492;
+  --now-dk: #026070;
+  --morning: #05B2C7;
+  --morning-dk: #038492;
+  --afternoon: #3995E9;
+  --afternoon-dk: #1A70C0;
+  --evening: #0473AD;
+  --evening-dk: #035A88;
+  --font-display: 'Cormorant Garamond', serif;
+  --font-body: 'Lato', sans-serif;
+  --display-scale: 1;
+  /* Footer button colours */
+  --btn-enjoy: #D8760A;
+  --btn-enjoy-dk: #A85008;
+  --btn-plan: #038492;
+  --btn-plan-dk: #026070;
+  --btn-achieve: #6A9E20;
+  --btn-achieve-dk: #4A7010;
+  --btn-highlights: #A03818;
+  --btn-highlights-dk: #782010;
+  --btn-physical: #C06040;
+  --btn-physical-dk: #904020;
+}
+
+html[data-theme="cyan-teal"] {
+  --bg-a: #EEF3FC;
+  --bg-b: #D8E6F8;
+  --text-hi: #1A3570;
+  --text-lo: #4A6AAA;
+  --accent: #6B96D6;
+  --accent-soft: rgba(107, 150, 214, 0.12);
+  --now: #6B96D6;
+  --now-dk: #2952A3;
+  --morning: #7AAAE0;
+  --morning-dk: #3D6FBB;
+  --afternoon: #A0C0E8;
+  --afternoon-dk: #6B96D6;
+  --evening: #4A78C0;
+  --evening-dk: #2952A3;
+  --btn-enjoy: #3D82E0;
+  --btn-enjoy-dk: #1A5DB8;
+  --btn-plan: #E07830;
+  --btn-plan-dk: #B05010;
+  --btn-achieve: #0AABBB;
+  --btn-achieve-dk: #007A88;
+  --btn-highlights: #C060A8;
+  --btn-highlights-dk: #8A2070;
+}
+
+html[data-theme="purple-lilac"] {
+  --bg-a: #F6F2FC;
+  --bg-b: #EDE6F8;
+  --text-hi: #3D2070;
+  --text-lo: #8070B0;
+  --accent: #9898E0;
+  --accent-soft: rgba(152, 152, 224, 0.12);
+  --now: #9898E0;
+  --now-dk: #7270DD;
+  --morning: #C4B0F0;
+  --morning-dk: #9A70C0;
+  --afternoon: #B8A8E8;
+  --afternoon-dk: #9898E0;
+  --evening: #DE83CB;
+  --evening-dk: #B82878;
+  --btn-enjoy: #7060D8;
+  --btn-enjoy-dk: #5040B0;
+  --btn-plan: #E06080;
+  --btn-plan-dk: #B03060;
+  --btn-achieve: #30A8B0;
+  --btn-achieve-dk: #207880;
+  --btn-highlights: #C040C0;
+  --btn-highlights-dk: #902090;
+}
+
