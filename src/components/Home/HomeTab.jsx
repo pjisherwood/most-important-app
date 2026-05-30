@@ -350,14 +350,6 @@ export default function HomeTab({
               textTransform: 'uppercase',
               color: 'rgba(255,255,255,0.65)',
             }}>Your most important hour</span>
-            <span style={{
-              fontFamily: 'var(--font-body)',
-              fontSize: '0.65rem',
-              fontWeight: 700,
-              color: '#FFD850',
-              marginTop: '4px',
-              display: 'block',
-            }}>Temporary deploy text</span>
           </div>
           <div className="hero-stat-bar">
             <div className="hero-stat-side">
