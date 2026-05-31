@@ -134,6 +134,7 @@ export default function HomeTab({
     groupBySession(inspEntries, 'insp')
     groupBySession(planEntries, 'plan')
     groupBySession(highlightEntries, 'highlights')
+    groupBySession(physicalEntries, 'physical')
 
     // Activity log — notes and dreams
     ;(activityLog || []).filter(e => isToday(e.ts))
@@ -151,7 +152,7 @@ export default function HomeTab({
     })
     return result
   }, [todayEntries, ciSessions, nowItems, justItems, wouldItems, recentPhotos,
-      meditations, inspEntries, planEntries, highlightEntries, activityLog])
+      meditations, inspEntries, planEntries, highlightEntries, physicalEntries, activityLog])
 
   // ── Render a timeline row ─────────────────────
   const renderRow = (ev, i, todayTimeline) => {
@@ -192,7 +193,7 @@ export default function HomeTab({
           onClick={() => setExpandedSess(p => ({ ...p, [ev.sessionId]: !p[ev.sessionId] }))}>
           <span className="t-time">{fmtTime(ev.ts)}</span>
           <span className="t-text">Enjoyed now{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
-          {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess[ev.sessionId] ? '25b2' : '25bc'}</span>}
+          {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess[ev.sessionId] ? '▲' : '▼'}</span>}
         </div>
         {expandedSess[ev.sessionId] && ev.entries?.map((e, j) => (
           <div key={j} className="t-sub-row">· {e.text}</div>
@@ -213,7 +214,7 @@ export default function HomeTab({
           onClick={() => setExpandedSess(p => ({ ...p, ['insp-' + ev.sessionId]: !p['insp-' + ev.sessionId] }))}>
           <span className="t-time">{fmtTime(ev.ts)}</span>
           <span className="t-text">Achievement{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
-          {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['insp-' + ev.sessionId] ? '25b2' : '25bc'}</span>}
+          {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['insp-' + ev.sessionId] ? '▲' : '▼'}</span>}
         </div>
         {expandedSess['insp-' + ev.sessionId] && ev.entries?.map((e, j) => (
           <div key={j} className="t-sub-row">· {e.text}</div>
@@ -227,7 +228,7 @@ export default function HomeTab({
           onClick={() => setExpandedSess(p => ({ ...p, ['plan-' + ev.sessionId]: !p['plan-' + ev.sessionId] }))}>
           <span className="t-time">{fmtTime(ev.ts)}</span>
           <span className="t-text">Planning{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
-          {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['plan-' + ev.sessionId] ? '25b2' : '25bc'}</span>}
+          {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['plan-' + ev.sessionId] ? '▲' : '▼'}</span>}
         </div>
         {expandedSess['plan-' + ev.sessionId] && ev.entries?.map((e, j) => (
           <div key={j} className="t-sub-row">· {e.text}</div>
@@ -241,9 +242,23 @@ export default function HomeTab({
           onClick={() => setExpandedSess(p => ({ ...p, ['hl-' + ev.sessionId]: !p['hl-' + ev.sessionId] }))}>
           <span className="t-time">{fmtTime(ev.ts)}</span>
           <span className="t-text">Highlights{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
-          {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['hl-' + ev.sessionId] ? '25b2' : '25bc'}</span>}
+          {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['hl-' + ev.sessionId] ? '▲' : '▼'}</span>}
         </div>
         {expandedSess['hl-' + ev.sessionId] && ev.entries?.map((e, j) => (
+          <div key={j} className="t-sub-row">· {e.text}</div>
+        ))}
+      </div>
+    )
+
+    if (ev.type === 'physical') return (
+      <div key={ev.sessionId || i}>
+        <div className="t-row" style={{ background: paleTint(btnColours.physical), cursor: 'pointer' }}
+          onClick={() => setExpandedSess(p => ({ ...p, ['phys-' + ev.sessionId]: !p['phys-' + ev.sessionId] }))}>
+          <span className="t-time">{fmtTime(ev.ts)}</span>
+          <span className="t-text">Physical{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
+          {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['phys-' + ev.sessionId] ? '▲' : '▼'}</span>}
+        </div>
+        {expandedSess['phys-' + ev.sessionId] && ev.entries?.map((e, j) => (
           <div key={j} className="t-sub-row">· {e.text}</div>
         ))}
       </div>
@@ -289,7 +304,7 @@ export default function HomeTab({
         entries={inspEntries} setEntries={setInspEntries} refreshQuote={refreshQuote}
         title="Achievement &amp; Progress" historyTitle="Progress History"
         placeholder="Note an achievement or progress…" icon="⭐"
-        headerBg="linear-gradient(135deg,var(--btn-achieve),var(--btn-achieve-dk))"
+        headerBg="var(--btn-achieve)"
         historyBtnStyle={{ background: 'rgba(0,160,160,0.15)', color: 'rgba(0,100,110,0.9)', border: '1.5px solid rgba(0,160,160,0.3)' }}
         sessionId={currentInspSess}
         accentColour={btnColours.achieve}
@@ -300,7 +315,7 @@ export default function HomeTab({
         entries={highlightEntries} setEntries={setHighlightEntries} refreshQuote={refreshQuote}
         title="Highlights" historyTitle="Highlights History"
         placeholder="A highlight from today…" icon="✨"
-        headerBg="linear-gradient(135deg,var(--btn-highlights),var(--btn-highlights-dk))"
+        headerBg="var(--btn-highlights)"
         historyBtnStyle={{ background: 'rgba(180,60,140,0.12)', color: 'rgba(130,20,90,0.9)', border: '1.5px solid rgba(180,60,140,0.25)' }}
         message="Take a moment to enjoy today&apos;s highlights and how good they felt. Imagine what more you would like tomorrow."
         sessionId={currentHlSess}
@@ -312,7 +327,7 @@ export default function HomeTab({
         entries={physicalEntries} setEntries={setPhysicalEntries} refreshQuote={refreshQuote}
         title="Physical" historyTitle="Physical History"
         placeholder="What did you do to move your body today…" icon="🏃"
-        headerBg="linear-gradient(135deg,var(--btn-physical),var(--btn-physical-dk))"
+        headerBg="var(--btn-physical)"
         historyBtnStyle={{ background: 'rgba(192,96,64,0.12)', color: 'rgba(144,64,32,0.9)', border: '1.5px solid rgba(192,96,64,0.25)' }}
         message="Your body carries you through every moment. Every step, stretch, and movement is worth noticing and celebrating."
         sessionId={currentPhysSess}
@@ -325,7 +340,7 @@ export default function HomeTab({
         entries={planEntries} setEntries={setPlanEntries} refreshQuote={refreshQuote}
         title="Planning" historyTitle="My Planning History"
         placeholder="Add a plan or next step…" icon="📋"
-        headerBg="linear-gradient(135deg,var(--btn-plan),var(--btn-plan-dk))"
+        headerBg="var(--btn-plan)"
         historyBtnStyle={{ background: 'rgba(200,120,40,0.12)', color: 'rgba(150,80,10,0.9)', border: '1.5px solid rgba(200,120,40,0.25)' }}
         message="You have the power to shape what comes next. Take a moment to imagine what you&apos;d love to happen — picture it, feel it, enjoy it."
         sessionId={currentPlanSess}
