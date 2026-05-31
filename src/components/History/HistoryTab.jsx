@@ -350,6 +350,12 @@ function renderSheetRow(ev, i) {
       <span className="hist-text">Today&apos;s Highlights{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
     </div>
   )
+  if (ev.type === 'physical') return (
+    <div key={i} className="hist-row" style={{ background: paleTint(physCol) }}>
+      <span className="hist-time">{fmtTime(ev.ts)}</span>
+      <span className="hist-text">Physical{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
+    </div>
+  )
   if (ev.type === 'note') return (
     <div key={i} className="hist-row" style={{ background: 'rgba(107,150,214,0.12)' }}>
       <span className="hist-time">{fmtTime(ev.ts)}</span>
@@ -393,6 +399,7 @@ export default function HistoryTab({ allTimeTotal, allDaySet, allTimeStreak, all
     const enjoyCol = getCssVar('--btn-enjoy') || '#3D82E0'
     const planCol  = getCssVar('--btn-plan')  || '#E07830'
     const achCol   = getCssVar('--btn-achieve') || '#0AABBB'
+    const physCol  = getCssVar('--btn-physical') || '#C06040'
     const hlCol    = getCssVar('--btn-highlights') || '#C060A8'
     const medCol   = getCssVar('--accent') || '#6B96D6'
 
@@ -465,6 +472,19 @@ export default function HistoryTab({ allTimeTotal, allDaySet, allTimeStreak, all
           {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expanded['hl-' + ev.sessionId] ? '▲' : '▼'}</span>}
         </div>
         {expanded['hl-' + ev.sessionId] && ev.entries?.map((e, j) => (
+          <div key={j} style={{ padding: '2px 0 2px 44px', fontFamily: 'var(--font-display)', fontSize: '0.75rem', color: 'var(--text-hi)', opacity: 0.75 }}>· {e.text}</div>
+        ))}
+      </div>
+    )
+    if (ev.type === 'physical') return (
+      <div key={ev.sessionId || i}>
+        <div className="hist-row" style={{ background: paleTint(physCol), cursor: ev.entries?.length > 0 ? 'pointer' : 'default' }}
+          onClick={() => ev.entries?.length > 0 && toggle('phys-' + ev.sessionId)}>
+          <span className="hist-time">{fmtTime(ev.ts)}</span>
+          <span className="hist-text">Today&apos;s Physical{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
+          {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expanded['phys-' + ev.sessionId] ? '▲' : '▼'}</span>}
+        </div>
+        {expanded['phys-' + ev.sessionId] && ev.entries?.map((e, j) => (
           <div key={j} style={{ padding: '2px 0 2px 44px', fontFamily: 'var(--font-display)', fontSize: '0.75rem', color: 'var(--text-hi)', opacity: 0.75 }}>· {e.text}</div>
         ))}
       </div>
