@@ -188,10 +188,10 @@ export default function StandaloneScreen({
                         onClick={() => setEntries(entries.filter(i => i.id !== m.item.id))}>&#10005;</button>
                     </div>
                   ) : (
-                    <div key={m.item.id} className="ds-item">
-                      <span style={{ fontSize: '0.5rem', marginTop: '0.24rem', opacity: 0.5 }}>&#9670;</span>
-                      <span className="ds-item-text">{m.item.text}</span>
-                      <button className="ds-item-del"
+                    <div key={m.item.id} className="t-row" style={{ background: 'rgba(255,255,255,0.6)' }}>
+                      <span className="t-time" style={{ color: 'var(--accent)' }}>{fmtTime(m.item.ts)}</span>
+                      <span className="t-text">{m.item.text}</span>
+                      <button className="t-del" style={{ background: 'none', border: 'none', color: 'var(--text-lo)', cursor: 'pointer', fontSize: '0.7rem', opacity: 0.5, padding: 2, flexShrink: 0 }}
                         onClick={() => setEntries(entries.filter(i => i.id !== m.item.id))}>&#10005;</button>
                     </div>
                   ))}
