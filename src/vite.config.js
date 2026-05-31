@@ -35,6 +35,8 @@ export default defineConfig({
       workbox: {
         // Precache all built assets
         globPatterns: ['**/*.{js,css,html,ico,png,svg,mp3}'],
+        // Never cache the deploy tool
+        globIgnores: ['**/deploy.html'],
         // Don't let the service worker skip waiting — avoids iOS reload loop
         skipWaiting: false,
         clientsClaim: true,
