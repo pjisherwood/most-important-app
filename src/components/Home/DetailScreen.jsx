@@ -37,7 +37,7 @@ export default function DetailScreen({
   return (
     <div className={'detail-screen' + (isActive ? ' active' : '')}>
       {/* Header */}
-      <div className="ds-header" style={{ background: 'linear-gradient(135deg,var(--btn-enjoy),var(--btn-enjoy-dk))' }}>
+      <div className="ds-header" style={{ background: 'var(--btn-enjoy)' }}>
         <button className="ds-back" onClick={onBack}>&#8249;</button>
         <div className="ds-title">What is good?</div>
         <div className="ds-stats">
