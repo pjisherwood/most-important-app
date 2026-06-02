@@ -552,7 +552,9 @@ export default function HistoryTab({ allTimeTotal, allDaySet, allTimeStreak, all
           }
         </div>
       ) : (
-        <MonthView allEvents={allEvents} />
+        <div className="hist-scroll">
+          <MonthView allEvents={allEvents} />
+        </div>
       )}
     </div>
   )
