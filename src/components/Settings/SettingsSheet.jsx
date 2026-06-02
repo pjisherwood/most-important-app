@@ -78,6 +78,81 @@ function buildGrid() {
 
 const COLOUR_GRID = buildGrid()
 
+// ── Colour Wheel (HSB circular picker) ───────
+function ColourWheel({ value, onChange }) {
+  const canvasRef = useRef(null)
+  const [dragging, setDragging] = useState(false)
+
+  const SIZE = 260
+  const RADIUS = SIZE / 2
+  const INNER = RADIUS * 0.28 // brightness strip width
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    // Draw hue/saturation wheel
+    for (let angle = 0; angle < 360; angle++) {
+      const grad = ctx.createRadialGradient(RADIUS, RADIUS, 0, RADIUS, RADIUS, RADIUS - INNER)
+      grad.addColorStop(0, `hsl(${angle},0%,100%)`)
+      grad.addColorStop(1, `hsl(${angle},100%,50%)`)
+      ctx.beginPath()
+      ctx.moveTo(RADIUS, RADIUS)
+      ctx.arc(RADIUS, RADIUS, RADIUS - INNER, (angle - 1) * Math.PI / 180, (angle + 1) * Math.PI / 180)
+      ctx.closePath()
+      ctx.fillStyle = grad
+      ctx.fill()
+    }
+    // Draw brightness strip (inner ring)
+    const bGrad = ctx.createLinearGradient(RADIUS, RADIUS - INNER, RADIUS, RADIUS - 2)
+    bGrad.addColorStop(0, 'rgba(0,0,0,0)')
+    bGrad.addColorStop(1, 'rgba(0,0,0,1)')
+    ctx.beginPath()
+    ctx.arc(RADIUS, RADIUS, RADIUS - 2, 0, Math.PI * 2)
+    ctx.arc(RADIUS, RADIUS, RADIUS - INNER, 0, Math.PI * 2, true)
+    ctx.fillStyle = bGrad
+    ctx.fill()
+  }, [])
+
+  const pickColour = useCallback((e) => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const rect = canvas.getBoundingClientRect()
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY
+    const x = (clientX - rect.left) * (SIZE / rect.width)
+    const y = (clientY - rect.top) * (SIZE / rect.height)
+    const ctx = canvas.getContext('2d')
+    const px = ctx.getImageData(Math.round(x), Math.round(y), 1, 1).data
+    if (px[3] < 10) return // transparent area
+    const hex = '#' + [px[0], px[1], px[2]].map(v => v.toString(16).padStart(2,'0')).join('')
+    onChange(hex)
+  }, [onChange])
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+      <canvas
+        ref={canvasRef}
+        width={SIZE}
+        height={SIZE}
+        style={{ width: '100%', maxWidth: SIZE, borderRadius: '50%', cursor: 'crosshair', touchAction: 'none' }}
+        onClick={pickColour}
+        onMouseDown={() => setDragging(true)}
+        onMouseUp={() => setDragging(false)}
+        onMouseMove={e => dragging && pickColour(e)}
+        onTouchStart={pickColour}
+        onTouchMove={e => { e.preventDefault(); pickColour(e) }}
+      />
+      {value && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 28, height: 28, borderRadius: 8, background: value, border: '2px solid rgba(0,0,0,0.15)' }} />
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.78rem', color: 'var(--text-lo)' }}>{value.toUpperCase()}</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function ColourGrid({ value, onChange }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0, borderRadius: 10, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}>
@@ -201,6 +276,7 @@ function ThemeEditor({ themeKey, onClose, onThemeChange }) {
   const [savedThemes, setSavedThemes] = useState(() => LS.get('ci-saved-themes', []))
   const [showSaveDialog, setShowSaveDialog] = useState(false)
   const [saveName, setSaveName] = useState('')
+  const [pickerMode, setPickerMode] = useState('grid') // 'grid' | 'wheel'
 
   const currentColour = useMemo(() => {
     const fallbacks = {
@@ -337,8 +413,25 @@ function ThemeEditor({ themeKey, onClose, onThemeChange }) {
           )}
         </div>
 
-        {/* Colour grid */}
-        <ColourGrid value={currentColour} onChange={handleColourChange} />
+        {/* Picker mode toggle */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+          {['grid', 'wheel'].map(mode => (
+            <button key={mode} onClick={() => setPickerMode(mode)} style={{
+              flex: 1, padding: '0.4rem', borderRadius: 10,
+              border: pickerMode === mode ? 'none' : '1.5px solid var(--border)',
+              background: pickerMode === mode ? 'var(--now)' : 'rgba(255,255,255,0.6)',
+              fontFamily: 'var(--font-body)', fontSize: '0.72rem', fontWeight: 600,
+              color: pickerMode === mode ? '#fff' : 'var(--text-lo)',
+              cursor: 'pointer', letterSpacing: '0.06em', textTransform: 'uppercase',
+            }}>{mode === 'grid' ? 'Grid' : 'Wheel'}</button>
+          ))}
+        </div>
+
+        {/* Colour picker */}
+        {pickerMode === 'grid'
+          ? <ColourGrid value={currentColour} onChange={handleColourChange} />
+          : <ColourWheel value={currentColour} onChange={handleColourChange} />
+        }
 
         {/* Action buttons */}
         <div style={{ display: 'flex', gap: 8, marginTop: '1rem' }}>
