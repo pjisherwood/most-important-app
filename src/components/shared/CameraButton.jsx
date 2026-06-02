@@ -93,27 +93,19 @@ function CameraScreen({ onClose, onSave, entryType }) {
   const lastDistRef = useRef(null)
   const fileRef = useRef(null)
 
-  // Cache stream at module level to avoid repeated permission prompts
-  // Start camera — reuse cached stream if available
+  // Start camera — stop stream when closed to avoid iOS red indicator
   useEffect(() => {
     let cancelled = false
     const start = async () => {
       try {
-        // Reuse existing stream if tracks are still live
-        if (CameraScreen._cachedStream && CameraScreen._cachedStream.active &&
-            CameraScreen._cachedStream.getTracks().every(t => t.readyState === 'live')) {
-          streamRef.current = CameraScreen._cachedStream
-        } else {
-          const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
-            audio: false,
-          })
-          CameraScreen._cachedStream = stream
-          streamRef.current = stream
-        }
-        if (cancelled) return
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
+          audio: false,
+        })
+        if (cancelled) { stream.getTracks().forEach(t => t.stop()); return }
+        streamRef.current = stream
         if (videoRef.current) {
-          videoRef.current.srcObject = streamRef.current
+          videoRef.current.srcObject = stream
           videoRef.current.play()
           setReady(true)
         }
@@ -122,8 +114,12 @@ function CameraScreen({ onClose, onSave, entryType }) {
       }
     }
     start()
-    // Don't stop the stream on unmount — keep it cached for next open
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+      // Always stop tracks on unmount — prevents iOS red camera indicator
+      streamRef.current?.getTracks().forEach(t => t.stop())
+      streamRef.current = null
+    }
   }, [])
 
   // Pinch to zoom handlers
