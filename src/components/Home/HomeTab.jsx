@@ -410,6 +410,21 @@ export default function HomeTab({
                   logToday(todayDraft, e); setTodayDraft('')
                 }
               }}
+              onPaste={async e => {
+                const items = e.clipboardData?.items || []
+                for (const item of items) {
+                  if (item.type.startsWith('image/')) {
+                    e.preventDefault()
+                    const file = item.getAsFile()
+                    if (file) {
+                      const { resizePhoto, savePhoto } = await import('../../hooks/usePhoto.js')
+                      const dataUrl = await resizePhoto(file)
+                      savePhoto(dataUrl, { entryType: 'today' })
+                      setRecentPhotos(loadPhotos())
+                    }
+                  }
+                }
+              }}
               placeholder="A moment worth remembering…"
             />
             <CameraButton
