@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from 'react'
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { THEMES, THEME_OVERRIDE_KEY, FONT_SIZES } from '../../constants/index.js'
 import { LS, KEYS } from '../../hooks/useStorage.js'
