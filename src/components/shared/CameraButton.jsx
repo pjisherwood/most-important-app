@@ -88,24 +88,32 @@ function CameraScreen({ onClose, onSave, entryType }) {
   const [ready, setReady] = useState(false)
   const [error, setError] = useState(null)
   const [capturing, setCapturing] = useState(false)
-  const [zoom, setZoom] = useState(1)
-  const zoomRef = useRef(1)
+  const [zoom, setZoom] = useState(0.85)
+  const zoomRef = useRef(0.85)
   const lastDistRef = useRef(null)
   const fileRef = useRef(null)
 
-  // Start camera
+  // Cache stream at module level to avoid repeated permission prompts
+  // Start camera — reuse cached stream if available
   useEffect(() => {
     let cancelled = false
     const start = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
-          audio: false,
-        })
-        if (cancelled) { stream.getTracks().forEach(t => t.stop()); return }
-        streamRef.current = stream
+        // Reuse existing stream if tracks are still live
+        if (CameraScreen._cachedStream && CameraScreen._cachedStream.active &&
+            CameraScreen._cachedStream.getTracks().every(t => t.readyState === 'live')) {
+          streamRef.current = CameraScreen._cachedStream
+        } else {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
+            audio: false,
+          })
+          CameraScreen._cachedStream = stream
+          streamRef.current = stream
+        }
+        if (cancelled) return
         if (videoRef.current) {
-          videoRef.current.srcObject = stream
+          videoRef.current.srcObject = streamRef.current
           videoRef.current.play()
           setReady(true)
         }
@@ -114,7 +122,8 @@ function CameraScreen({ onClose, onSave, entryType }) {
       }
     }
     start()
-    return () => { cancelled = true; streamRef.current?.getTracks().forEach(t => t.stop()) }
+    // Don't stop the stream on unmount — keep it cached for next open
+    return () => { cancelled = true }
   }, [])
 
   // Pinch to zoom handlers
@@ -136,7 +145,7 @@ function CameraScreen({ onClose, onSave, entryType }) {
       const dist = getDistance(e.touches)
       const delta = dist / lastDistRef.current
       lastDistRef.current = dist
-      const newZoom = Math.min(4, Math.max(1, zoomRef.current * delta))
+      const newZoom = Math.min(4, Math.max(0.5, zoomRef.current * delta))
       zoomRef.current = newZoom
       setZoom(newZoom)
     }
