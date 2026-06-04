@@ -317,7 +317,7 @@ export default function HomeTab({
         placeholder="A highlight from today…" icon="✨"
         headerBg="var(--btn-highlights)"
         historyBtnStyle={{ background: 'rgba(180,60,140,0.12)', color: 'rgba(130,20,90,0.9)', border: '1.5px solid rgba(180,60,140,0.25)' }}
-        message="Take a moment to enjoy today&apos;s highlights and how good they felt. Imagine what more you would like tomorrow."
+        message="Find highlights every day, no matter how small."
         sessionId={currentHlSess}
         accentColour={btnColours.highlights}
       />
@@ -329,7 +329,7 @@ export default function HomeTab({
         placeholder="What did you do to move your body today…" icon="🏃"
         headerBg="var(--btn-physical)"
         historyBtnStyle={{ background: 'rgba(192,96,64,0.12)', color: 'rgba(144,64,32,0.9)', border: '1.5px solid rgba(192,96,64,0.25)' }}
-        message="Your body carries you through every moment. Every step, stretch, and movement is worth noticing and celebrating."
+        message="Move and stretch every day. Every little counts — use it or lose it."
         sessionId={currentPhysSess}
         entryType="Physical"
         accentColour={btnColours.physical}
@@ -342,7 +342,7 @@ export default function HomeTab({
         placeholder="Add a plan or next step…" icon="📋"
         headerBg="var(--btn-plan)"
         historyBtnStyle={{ background: 'rgba(200,120,40,0.12)', color: 'rgba(150,80,10,0.9)', border: '1.5px solid rgba(200,120,40,0.25)' }}
-        message="You have the power to shape what comes next. Take a moment to imagine what you&apos;d love to happen — picture it, feel it, enjoy it."
+        message="You have the power to shape what comes next."
         sessionId={currentPlanSess}
         checkable
         accentColour={btnColours.plan}
