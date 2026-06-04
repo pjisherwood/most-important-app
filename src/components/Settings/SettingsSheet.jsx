@@ -82,37 +82,57 @@ const COLOUR_GRID = buildGrid()
 function ColourWheel({ value, onChange }) {
   const canvasRef = useRef(null)
   const [dragging, setDragging] = useState(false)
+  const [indicator, setIndicator] = useState(null)
 
-  const SIZE = 260
+  const SIZE = 280
   const RADIUS = SIZE / 2
-  const INNER = RADIUS * 0.28 // brightness strip width
+
+  const hexToHsl = (hex) => {
+    if (!hex || hex.length < 7) return null
+    const r = parseInt(hex.slice(1,3),16)/255
+    const g = parseInt(hex.slice(3,5),16)/255
+    const b = parseInt(hex.slice(5,7),16)/255
+    const max = Math.max(r,g,b), min = Math.min(r,g,b)
+    const l = (max+min)/2
+    if (max === min) return { h:0, s:0, l }
+    const d = max - min
+    const s = l > 0.5 ? d/(2-max-min) : d/(max+min)
+    let h = max === r ? (g-b)/d + (g<b?6:0)
+          : max === g ? (b-r)/d + 2
+          : (r-g)/d + 4
+    h /= 6
+    return { h: h*360, s, l }
+  }
+
+  const hslToXY = (h, s) => {
+    const angle = (h - 90) * Math.PI / 180
+    const dist = s * (RADIUS - 2)
+    return { x: RADIUS + dist * Math.cos(angle), y: RADIUS + dist * Math.sin(angle) }
+  }
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    // Draw hue/saturation wheel
+    const ctx = canvas.getContext("2d")
     for (let angle = 0; angle < 360; angle++) {
-      const grad = ctx.createRadialGradient(RADIUS, RADIUS, 0, RADIUS, RADIUS, RADIUS - INNER)
-      grad.addColorStop(0, `hsl(${angle},0%,100%)`)
-      grad.addColorStop(1, `hsl(${angle},100%,50%)`)
+      const grad = ctx.createRadialGradient(RADIUS, RADIUS, 0, RADIUS, RADIUS, RADIUS)
+      grad.addColorStop(0, "hsl(" + angle + ",0%,100%)")
+      grad.addColorStop(1, "hsl(" + angle + ",100%,50%)")
       ctx.beginPath()
       ctx.moveTo(RADIUS, RADIUS)
-      ctx.arc(RADIUS, RADIUS, RADIUS - INNER, (angle - 1) * Math.PI / 180, (angle + 1) * Math.PI / 180)
+      ctx.arc(RADIUS, RADIUS, RADIUS, (angle - 1.5) * Math.PI / 180, (angle + 1.5) * Math.PI / 180)
       ctx.closePath()
       ctx.fillStyle = grad
       ctx.fill()
     }
-    // Draw brightness strip (inner ring)
-    const bGrad = ctx.createLinearGradient(RADIUS, RADIUS - INNER, RADIUS, RADIUS - 2)
-    bGrad.addColorStop(0, 'rgba(0,0,0,0)')
-    bGrad.addColorStop(1, 'rgba(0,0,0,1)')
-    ctx.beginPath()
-    ctx.arc(RADIUS, RADIUS, RADIUS - 2, 0, Math.PI * 2)
-    ctx.arc(RADIUS, RADIUS, RADIUS - INNER, 0, Math.PI * 2, true)
-    ctx.fillStyle = bGrad
-    ctx.fill()
   }, [])
+
+  useEffect(() => {
+    if (!value) return
+    const hsl = hexToHsl(value)
+    if (!hsl) return
+    setIndicator(hslToXY(hsl.h, hsl.s))
+  }, [value])
 
   const pickColour = useCallback((e) => {
     const canvas = canvasRef.current
@@ -122,31 +142,49 @@ function ColourWheel({ value, onChange }) {
     const clientY = e.touches ? e.touches[0].clientY : e.clientY
     const x = (clientX - rect.left) * (SIZE / rect.width)
     const y = (clientY - rect.top) * (SIZE / rect.height)
-    const ctx = canvas.getContext('2d')
+    const dx = x - RADIUS, dy = y - RADIUS
+    if (Math.sqrt(dx*dx + dy*dy) > RADIUS) return
+    const ctx = canvas.getContext("2d")
     const px = ctx.getImageData(Math.round(x), Math.round(y), 1, 1).data
-    if (px[3] < 10) return // transparent area
-    const hex = '#' + [px[0], px[1], px[2]].map(v => v.toString(16).padStart(2,'0')).join('')
+    if (px[3] < 10) return
+    const hex = "#" + [px[0], px[1], px[2]].map(v => v.toString(16).padStart(2,"0")).join("")
+    setIndicator({ x, y })
     onChange(hex)
   }, [onChange])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-      <canvas
-        ref={canvasRef}
-        width={SIZE}
-        height={SIZE}
-        style={{ width: '100%', maxWidth: SIZE, borderRadius: '50%', cursor: 'crosshair', touchAction: 'none' }}
-        onClick={pickColour}
-        onMouseDown={() => setDragging(true)}
-        onMouseUp={() => setDragging(false)}
-        onMouseMove={e => dragging && pickColour(e)}
-        onTouchStart={pickColour}
-        onTouchMove={e => { e.preventDefault(); pickColour(e) }}
-      />
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+      <div style={{ position: "relative", width: "100%", maxWidth: SIZE }}>
+        <canvas
+          ref={canvasRef}
+          width={SIZE}
+          height={SIZE}
+          style={{ width: "100%", borderRadius: "50%", cursor: "crosshair", touchAction: "none", display: "block" }}
+          onMouseDown={(e) => { setDragging(true); pickColour(e) }}
+          onMouseUp={() => setDragging(false)}
+          onMouseMove={e => dragging && pickColour(e)}
+          onTouchStart={e => { e.preventDefault(); pickColour(e) }}
+          onTouchMove={e => { e.preventDefault(); pickColour(e) }}
+        />
+        {indicator && (
+          <div style={{
+            position: "absolute",
+            left: (indicator.x / SIZE * 100) + "%",
+            top: (indicator.y / SIZE * 100) + "%",
+            width: 18, height: 18,
+            borderRadius: "50%",
+            border: "2.5px solid #fff",
+            boxShadow: "0 0 0 1.5px rgba(0,0,0,0.35), 0 2px 6px rgba(0,0,0,0.3)",
+            background: value || "transparent",
+            transform: "translate(-50%, -50%)",
+            pointerEvents: "none",
+          }} />
+        )}
+      </div>
       {value && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 28, height: 28, borderRadius: 8, background: value, border: '2px solid rgba(0,0,0,0.15)' }} />
-          <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.78rem', color: 'var(--text-lo)' }}>{value.toUpperCase()}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ width: 28, height: 28, borderRadius: 8, background: value, border: "2px solid rgba(0,0,0,0.15)" }} />
+          <span style={{ fontFamily: "var(--font-body)", fontSize: "0.78rem", color: "var(--text-lo)" }}>{value.toUpperCase()}</span>
         </div>
       )}
     </div>
@@ -276,7 +314,7 @@ function ThemeEditor({ themeKey, onClose, onThemeChange }) {
   const [savedThemes, setSavedThemes] = useState(() => LS.get('ci-saved-themes', []))
   const [showSaveDialog, setShowSaveDialog] = useState(false)
   const [saveName, setSaveName] = useState('')
-  const [pickerMode, setPickerMode] = useState('grid') // 'grid' | 'wheel'
+  const [pickerMode, setPickerMode] = useState('wheel') // 'wheel' | 'grid'
 
   const currentColour = useMemo(() => {
     const fallbacks = {
@@ -415,7 +453,7 @@ function ThemeEditor({ themeKey, onClose, onThemeChange }) {
 
         {/* Picker mode toggle */}
         <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-          {['grid', 'wheel'].map(mode => (
+          {['wheel', 'grid'].map(mode => (
             <button key={mode} onClick={() => setPickerMode(mode)} style={{
               flex: 1, padding: '0.4rem', borderRadius: 10,
               border: pickerMode === mode ? 'none' : '1.5px solid var(--border)',
@@ -428,9 +466,9 @@ function ThemeEditor({ themeKey, onClose, onThemeChange }) {
         </div>
 
         {/* Colour picker */}
-        {pickerMode === 'grid'
-          ? <ColourGrid value={currentColour} onChange={handleColourChange} />
-          : <ColourWheel value={currentColour} onChange={handleColourChange} />
+        {pickerMode === 'wheel'
+          ? <ColourWheel value={currentColour} onChange={handleColourChange} />
+          : <ColourGrid value={currentColour} onChange={handleColourChange} />
         }
 
         {/* Action buttons */}
