@@ -12,7 +12,7 @@
 /* ── HERO ── */
 .home-hero {
   flex-shrink: 0;
-  background: var(--now-dk);
+  background: var(--now);
   padding: calc(env(safe-area-inset-top) + 0.5rem) 1.4rem 0.7rem;
   display: flex;
   flex-direction: column;
