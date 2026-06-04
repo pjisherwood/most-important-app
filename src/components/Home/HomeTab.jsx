@@ -306,6 +306,7 @@ export default function HomeTab({
         placeholder="Note an achievement or progress…" icon="⭐"
         headerBg="var(--btn-achieve)"
         historyBtnStyle={{ background: 'rgba(0,160,160,0.15)', color: 'rgba(0,100,110,0.9)', border: '1.5px solid rgba(0,160,160,0.3)' }}
+        message="Even the smallest progress and achievement is worth noticing."
         sessionId={currentInspSess}
         accentColour={btnColours.achieve}
       />
