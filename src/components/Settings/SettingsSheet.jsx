@@ -85,7 +85,7 @@ function ColourWheel({ value, onChange }) {
   const [brightness, setBrightness] = useState(1.0)
   const [baseHex, setBaseHex] = useState(null)
 
-  const SIZE = 280
+  const SIZE = 220
   const RADIUS = SIZE / 2
 
   useEffect(() => {
@@ -158,28 +158,52 @@ function ColourWheel({ value, onChange }) {
 
       {/* Brightness slider */}
       <div style={{ width: "100%", padding: "0 4px" }}>
-        <div style={{ fontSize: "0.65rem", fontFamily: "var(--font-body)", color: "var(--text-lo)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8, textAlign: "center" }}>Brightness</div>
-        <div style={{ position: "relative", height: 28, borderRadius: 14, overflow: "hidden",
-          background: "linear-gradient(to right, #000, " + sliderBg + ")",
-          boxShadow: "inset 0 1px 3px rgba(0,0,0,0.2)" }}>
-          <input
-            type="range" min="0.05" max="1" step="0.01"
-            value={brightness}
-            onChange={handleBrightness}
-            style={{
-              position: "absolute", inset: 0, width: "100%", height: "100%",
-              opacity: 0, cursor: "pointer", margin: 0,
-            }}
-          />
-          {/* Thumb indicator */}
+        <div style={{ fontSize: "0.65rem", fontFamily: "var(--font-body)", color: "var(--text-lo)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 6, textAlign: "center" }}>Brightness</div>
+        <div
+          style={{ position: "relative", height: 32, borderRadius: 16,
+            background: "linear-gradient(to right, #000, " + sliderBg + ")",
+            boxShadow: "inset 0 1px 3px rgba(0,0,0,0.2)",
+            touchAction: "none", cursor: "pointer" }}
+          onMouseDown={e => {
+            const rect = e.currentTarget.getBoundingClientRect()
+            const b = Math.min(1, Math.max(0.05, (e.clientX - rect.left) / rect.width))
+            setBrightness(b)
+            const base = baseHex || value
+            if (base) onChange(applyBrightness(base, b))
+          }}
+          onMouseMove={e => {
+            if (e.buttons !== 1) return
+            const rect = e.currentTarget.getBoundingClientRect()
+            const b = Math.min(1, Math.max(0.05, (e.clientX - rect.left) / rect.width))
+            setBrightness(b)
+            const base = baseHex || value
+            if (base) onChange(applyBrightness(base, b))
+          }}
+          onTouchStart={e => {
+            e.preventDefault()
+            const rect = e.currentTarget.getBoundingClientRect()
+            const b = Math.min(1, Math.max(0.05, (e.touches[0].clientX - rect.left) / rect.width))
+            setBrightness(b)
+            const base = baseHex || value
+            if (base) onChange(applyBrightness(base, b))
+          }}
+          onTouchMove={e => {
+            e.preventDefault()
+            const rect = e.currentTarget.getBoundingClientRect()
+            const b = Math.min(1, Math.max(0.05, (e.touches[0].clientX - rect.left) / rect.width))
+            setBrightness(b)
+            const base = baseHex || value
+            if (base) onChange(applyBrightness(base, b))
+          }}
+        >
           <div style={{
             position: "absolute", top: "50%",
             left: (brightness * 100) + "%",
             transform: "translate(-50%, -50%)",
-            width: 22, height: 22, borderRadius: "50%",
+            width: 26, height: 26, borderRadius: "50%",
             background: applyBrightness(sliderBg, brightness),
-            border: "2.5px solid #fff",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.35)",
+            border: "3px solid #fff",
+            boxShadow: "0 1px 6px rgba(0,0,0,0.4)",
             pointerEvents: "none",
           }} />
         </div>
@@ -248,7 +272,7 @@ function MiniPreview({ themeKey, colours, textDark, activeSlot, onSelectSlot }) 
   const physCol   = get('physical','--btn-physical')
 
   const btnStyle = (slot, col) => ({
-    borderRadius: 8, height: 26, display: 'flex', alignItems: 'center',
+    borderRadius: 8, height: 22, display: 'flex', alignItems: 'center',
     justifyContent: 'center', cursor: 'pointer',
     background: col,
     outline: activeSlot === slot ? '3px solid rgba(0,0,0,0.45)' : 'none',
@@ -262,7 +286,7 @@ function MiniPreview({ themeKey, colours, textDark, activeSlot, onSelectSlot }) 
   })
 
   return (
-    <div style={{ borderRadius: 14, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.18)', marginBottom: 12 }}>
+    <div style={{ borderRadius: 14, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.18)', marginBottom: 8 }}>
       {/* Header */}
       <div onClick={() => onSelectSlot('header')} style={{
         background: `linear-gradient(135deg,${headerCol},${headerCol}cc)`,
@@ -428,7 +452,7 @@ function ThemeEditor({ themeKey, onClose, onThemeChange }) {
         />
 
         {/* Active slot + text toggle */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, padding: '0.5rem 0.75rem', background: 'rgba(255,255,255,0.65)', borderRadius: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, padding: '0.35rem 0.75rem', background: 'rgba(255,255,255,0.65)', borderRadius: 12 }}>
           <div style={{ width: 28, height: 28, borderRadius: 7, background: currentColour, border: '2px solid rgba(0,0,0,0.12)', flexShrink: 0 }} />
           <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-hi)', flex: 1 }}>{activeLabel}</span>
           {isBtn && (
@@ -460,7 +484,7 @@ function ThemeEditor({ themeKey, onClose, onThemeChange }) {
         <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
           {['wheel', 'grid'].map(mode => (
             <button key={mode} onClick={() => setPickerMode(mode)} style={{
-              flex: 1, padding: '0.4rem', borderRadius: 10,
+              flex: 1, padding: '0.3rem', borderRadius: 10,
               border: pickerMode === mode ? 'none' : '1.5px solid var(--border)',
               background: pickerMode === mode ? 'var(--now)' : 'rgba(255,255,255,0.6)',
               fontFamily: 'var(--font-body)', fontSize: '0.72rem', fontWeight: 600,
