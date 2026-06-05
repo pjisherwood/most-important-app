@@ -82,33 +82,11 @@ const COLOUR_GRID = buildGrid()
 function ColourWheel({ value, onChange }) {
   const canvasRef = useRef(null)
   const [dragging, setDragging] = useState(false)
-  const [indicator, setIndicator] = useState(null)
+  const [brightness, setBrightness] = useState(1.0)
+  const [baseHex, setBaseHex] = useState(null)
 
   const SIZE = 280
   const RADIUS = SIZE / 2
-
-  const hexToHsl = (hex) => {
-    if (!hex || hex.length < 7) return null
-    const r = parseInt(hex.slice(1,3),16)/255
-    const g = parseInt(hex.slice(3,5),16)/255
-    const b = parseInt(hex.slice(5,7),16)/255
-    const max = Math.max(r,g,b), min = Math.min(r,g,b)
-    const l = (max+min)/2
-    if (max === min) return { h:0, s:0, l }
-    const d = max - min
-    const s = l > 0.5 ? d/(2-max-min) : d/(max+min)
-    let h = max === r ? (g-b)/d + (g<b?6:0)
-          : max === g ? (b-r)/d + 2
-          : (r-g)/d + 4
-    h /= 6
-    return { h: h*360, s, l }
-  }
-
-  const hslToXY = (h, s) => {
-    const angle = (h - 90) * Math.PI / 180
-    const dist = s * (RADIUS - 2)
-    return { x: RADIUS + dist * Math.cos(angle), y: RADIUS + dist * Math.sin(angle) }
-  }
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -127,12 +105,13 @@ function ColourWheel({ value, onChange }) {
     }
   }, [])
 
-  useEffect(() => {
-    if (!value) return
-    const hsl = hexToHsl(value)
-    if (!hsl) return
-    setIndicator(hslToXY(hsl.h, hsl.s))
-  }, [value])
+  const applyBrightness = useCallback((hex, b) => {
+    if (!hex || hex.length < 7) return hex
+    const r = Math.round(parseInt(hex.slice(1,3),16) * b)
+    const g = Math.round(parseInt(hex.slice(3,5),16) * b)
+    const bv = Math.round(parseInt(hex.slice(5,7),16) * b)
+    return "#" + [r,g,bv].map(v => Math.max(0,Math.min(255,v)).toString(16).padStart(2,"0")).join("")
+  }, [])
 
   const pickColour = useCallback((e) => {
     const canvas = canvasRef.current
@@ -148,39 +127,64 @@ function ColourWheel({ value, onChange }) {
     const px = ctx.getImageData(Math.round(x), Math.round(y), 1, 1).data
     if (px[3] < 10) return
     const hex = "#" + [px[0], px[1], px[2]].map(v => v.toString(16).padStart(2,"0")).join("")
-    setIndicator({ x, y })
-    onChange(hex)
-  }, [onChange])
+    setBaseHex(hex)
+    const final = applyBrightness(hex, brightness)
+    onChange(final)
+  }, [onChange, brightness, applyBrightness])
+
+  const handleBrightness = useCallback((e) => {
+    const b = parseFloat(e.target.value)
+    setBrightness(b)
+    const base = baseHex || value
+    if (base) onChange(applyBrightness(base, b))
+  }, [baseHex, value, onChange, applyBrightness])
+
+  // Brightness gradient for the slider track
+  const sliderBg = baseHex || value || "#888"
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
-      <div style={{ position: "relative", width: "100%", maxWidth: SIZE }}>
-        <canvas
-          ref={canvasRef}
-          width={SIZE}
-          height={SIZE}
-          style={{ width: "100%", borderRadius: "50%", cursor: "crosshair", touchAction: "none", display: "block" }}
-          onMouseDown={(e) => { setDragging(true); pickColour(e) }}
-          onMouseUp={() => setDragging(false)}
-          onMouseMove={e => dragging && pickColour(e)}
-          onTouchStart={e => { e.preventDefault(); pickColour(e) }}
-          onTouchMove={e => { e.preventDefault(); pickColour(e) }}
-        />
-        {indicator && (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
+      <canvas
+        ref={canvasRef}
+        width={SIZE}
+        height={SIZE}
+        style={{ width: "100%", borderRadius: "50%", cursor: "crosshair", touchAction: "none", display: "block" }}
+        onMouseDown={(e) => { setDragging(true); pickColour(e) }}
+        onMouseUp={() => setDragging(false)}
+        onMouseMove={e => dragging && pickColour(e)}
+        onTouchStart={e => { e.preventDefault(); pickColour(e) }}
+        onTouchMove={e => { e.preventDefault(); pickColour(e) }}
+      />
+
+      {/* Brightness slider */}
+      <div style={{ width: "100%", padding: "0 4px" }}>
+        <div style={{ fontSize: "0.65rem", fontFamily: "var(--font-body)", color: "var(--text-lo)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8, textAlign: "center" }}>Brightness</div>
+        <div style={{ position: "relative", height: 28, borderRadius: 14, overflow: "hidden",
+          background: "linear-gradient(to right, #000, " + sliderBg + ")",
+          boxShadow: "inset 0 1px 3px rgba(0,0,0,0.2)" }}>
+          <input
+            type="range" min="0.05" max="1" step="0.01"
+            value={brightness}
+            onChange={handleBrightness}
+            style={{
+              position: "absolute", inset: 0, width: "100%", height: "100%",
+              opacity: 0, cursor: "pointer", margin: 0,
+            }}
+          />
+          {/* Thumb indicator */}
           <div style={{
-            position: "absolute",
-            left: (indicator.x / SIZE * 100) + "%",
-            top: (indicator.y / SIZE * 100) + "%",
-            width: 18, height: 18,
-            borderRadius: "50%",
-            border: "2.5px solid #fff",
-            boxShadow: "0 0 0 1.5px rgba(0,0,0,0.35), 0 2px 6px rgba(0,0,0,0.3)",
-            background: value || "transparent",
+            position: "absolute", top: "50%",
+            left: (brightness * 100) + "%",
             transform: "translate(-50%, -50%)",
+            width: 22, height: 22, borderRadius: "50%",
+            background: applyBrightness(sliderBg, brightness),
+            border: "2.5px solid #fff",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.35)",
             pointerEvents: "none",
           }} />
-        )}
+        </div>
       </div>
+
       {value && (
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={{ width: 28, height: 28, borderRadius: 8, background: value, border: "2px solid rgba(0,0,0,0.15)" }} />
@@ -190,6 +194,7 @@ function ColourWheel({ value, onChange }) {
     </div>
   )
 }
+
 
 function ColourGrid({ value, onChange }) {
   return (
