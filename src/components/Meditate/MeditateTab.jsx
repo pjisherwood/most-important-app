@@ -298,12 +298,8 @@ const SOUNDS = [
   { key: 'soothing-fire',        label: 'Soothing Fire',          file: '/soothing-fire.mp3' },
   { key: 'bonfire',              label: 'Bonfire',                file: '/bonfire.mp3' },
   { key: 'ocean-waves',          label: 'Ocean Waves',            file: '/ocean-waves.mp3' },
-  { key: 'beach-waves',          label: 'Beach Waves',            file: '/beach-waves.mp3' },
-  { key: 'gentle-wind',          label: 'Gentle Wind',            file: '/gentle-wind.mp3' },
   { key: 'rain',                 label: 'Rain',                   file: '/rain.mp3' },
-  { key: 'birds-morning-breeze', label: 'Birds', file: '/birds.mp3' },
-  { key: 'stream',                label: 'Stream',                 file: '/stream.mp3' },
-  { key: 'stream-gentle',         label: 'Gentle Stream',          file: '/stream-gentle.mp3' },
+  { key: 'stream',               label: 'Stream',                 file: '/stream.mp3' },
 ]
 
 
