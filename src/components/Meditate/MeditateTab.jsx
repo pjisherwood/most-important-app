@@ -832,22 +832,27 @@ export default function MeditateTab({ meditations, setMeditations, refreshQuote,
   const setChime  = v => { setChimeRaw(v);  LS.set(KEYS.CHIME, v) }
 
   // ── Compute displayed stats using base+increment system ──
-  const overrides = LS.get('med-overrides', { streakBase: 0, minsBase: 0, sessionsBase: 0, setAt: null })
-  const overrideSetAt = overrides.setAt ? new Date(overrides.setAt) : null
-  const sessionsAfter = overrideSetAt
-    ? meditations.filter(m => new Date(m.timestamp) > overrideSetAt)
-    : meditations
-  const earnedMins     = sessionsAfter.reduce((s, m) => s + m.duration, 0)
-  const earnedSessions = sessionsAfter.length
+  // Migration: remove any med-overrides that have a setAt cutoff
+  // which was causing real sessions to be filtered out
+  useEffect(() => {
+    const overrides = LS.get('med-overrides', {})
+    if (overrides.setAt) {
+      LS.remove('med-overrides')
+    }
+  }, [])
+
+  // Count all meditations directly — no cutoff filtering
+  const earnedMins     = meditations.reduce((s, m) => s + (m.duration || 0), 0)
+  const earnedSessions = meditations.length
 
   const medStreak = (() => {
     const days = [...new Set(meditations.map(m => new Date(m.timestamp).toDateString()))]
       .sort((a, b) => new Date(b) - new Date(a))
-    if (!days.length) return overrides.streakBase
+    if (!days.length) return 0
     const todayStr = new Date().toDateString()
     const yest = new Date(); yest.setDate(yest.getDate() - 1)
     const yesterdayStr = yest.toDateString()
-    if (days[0] !== todayStr && days[0] !== yesterdayStr) return overrides.streakBase
+    if (days[0] !== todayStr && days[0] !== yesterdayStr) return 0
     let s = 0
     for (let i = 0; i < days.length; i++) {
       const exp = new Date()
@@ -855,11 +860,11 @@ export default function MeditateTab({ meditations, setMeditations, refreshQuote,
       else exp.setDate(exp.getDate() - i)
       if (exp.toDateString() === days[i]) s++; else break
     }
-    return overrides.streakBase + s
+    return s
   })()
 
-  const totalMins     = overrides.minsBase + earnedMins
-  const totalSessions = overrides.sessionsBase + earnedSessions
+  const totalMins     = earnedMins
+  const totalSessions = earnedSessions
 
   // ── Silent audio keepalive ────────────────────
   const startSilentAudio = () => {
