@@ -165,10 +165,10 @@ function MeditationSettings({ meditations, setMeditations, onClose, medStreak, t
     if (!adding) return
     const ts = new Date(adding.dateStr)
     ts.setHours(8, 0, 0, 0)
-    setMeditations(prev =>
-      [...prev, { id: uid(), timestamp: ts.toISOString(), duration: 10 }]
-        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-    )
+    const newSession = { id: uid(), timestamp: ts.toISOString(), duration: 10 }
+    const updated = [...meditations, newSession]
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+    setMeditations(updated)
     setAdding(null)
   }
 
