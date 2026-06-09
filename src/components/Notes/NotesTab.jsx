@@ -206,18 +206,37 @@ function NoteEditor({ note, noteFolders, onSave, onDelete, onCancel, defaultFold
     ))
   }
 
-  // Handle Enter — new paragraph carrying forward formatting
+  // Handle Enter — split text at cursor position, new paragraph carries forward formatting
   const handleKeyDown = (idx, e) => {
     if (e.key === 'Enter') {
       e.preventDefault()
-      const newPara = { text: '', fmt: { ...paras[idx].fmt } }
+      const el = textRefs.current[idx]
+      const cursor = el ? el.selectionStart : paras[idx].text.length
+      const before = paras[idx].text.slice(0, cursor)
+      const after  = paras[idx].text.slice(cursor)
+      const newPara = { text: after, fmt: { ...paras[idx].fmt } }
       setParas(prev => {
         const updated = [...prev]
+        updated[idx] = { ...updated[idx], text: before }
         updated.splice(idx + 1, 0, newPara)
         return updated
       })
       setCurPara(idx + 1)
-      setTimeout(() => textRefs.current[idx + 1]?.focus(), 30)
+      setTimeout(() => {
+        const next = textRefs.current[idx + 1]
+        if (next) {
+          next.focus()
+          next.setSelectionRange(0, 0)
+          next.style.height = 'auto'
+          next.style.height = next.scrollHeight + 'px'
+        }
+        // Also resize the current paragraph now it may be shorter
+        const cur = textRefs.current[idx]
+        if (cur) {
+          cur.style.height = 'auto'
+          cur.style.height = cur.scrollHeight + 'px'
+        }
+      }, 30)
     }
     // Handle Backspace on empty paragraph — remove it
     if (e.key === 'Backspace' && paras[idx].text === '' && paras.length > 1) {
@@ -555,7 +574,6 @@ export default function NotesTab({ notes, setNotes, noteFolders, setNoteFolders,
             <div className="med-app-title" style={{fontFamily:'var(--font-display)',fontSize:'clamp(1.8rem,7vw,2.5rem)',fontWeight:500,color:'var(--text-hi)',lineHeight:1}}>Notes</div>
             <div className="dreams-rule" />
             <div className="dreams-sub">Inspiration · Ideas · Reflection</div>
-            <button className="nv2-header-btn" style={{position:'absolute',right:'1rem',top:'calc(env(safe-area-inset-top) + 1rem)'}} onClick={() => openEditor('new')}>+</button>
           </div>
 
           <div className="nv2-list-body">
@@ -600,6 +618,9 @@ export default function NotesTab({ notes, setNotes, noteFolders, setNoteFolders,
           </div>
             </div>
           </div>
+
+          {/* FAB — new note, bottom-right */}
+          <button className="nv2-fab" onClick={() => openEditor('new')} aria-label="New note">+</button>
         </>
       ) : (
         <>
@@ -614,7 +635,6 @@ export default function NotesTab({ notes, setNotes, noteFolders, setNoteFolders,
                 const f = noteFolders.find(f => f.id === viewFolder)
                 if (f) { setRenamingFolder(f.id); setRenameVal(f.name); setPendingColor(f.color || 'var(--accent)') }
               }}>✎</button>
-            <button className="nv2-header-btn" style={{ background: 'rgba(255,255,255,0.25)', border: '1.5px solid rgba(255,255,255,0.4)', color: '#fff' }} onClick={() => openEditor('new')}>+</button>
           </div>
           <div className="nv2-unfiled-scroll" style={{ maxHeight: '80%', flex: 1 }}>
             {displayNotes?.length === 0
@@ -622,6 +642,9 @@ export default function NotesTab({ notes, setNotes, noteFolders, setNoteFolders,
               : displayNotes?.map(n => <NoteStrip key={n.id} n={n} />)
             }
           </div>
+
+          {/* FAB — new note, bottom-right */}
+          <button className="nv2-fab" onClick={() => openEditor('new')} aria-label="New note">+</button>
         </>
       )}
 
