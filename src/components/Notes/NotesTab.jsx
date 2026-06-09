@@ -192,6 +192,18 @@ function NoteEditor({ note, noteFolders, onSave, onDelete, onCancel, defaultFold
 
   useEffect(() => { setTimeout(() => textRefs.current[0]?.focus(), 120) }, [])
 
+  // Resize all textareas to fit their content on initial render (existing notes)
+  useEffect(() => {
+    setTimeout(() => {
+      textRefs.current.forEach(el => {
+        if (el) {
+          el.style.height = 'auto'
+          el.style.height = el.scrollHeight + 'px'
+        }
+      })
+    }, 50)
+  }, [paras.length])
+
   const currentFmt = paras[curPara]?.fmt || { bold: false, serif: false, bigger: false, bullet: false }
 
   // Update a paragraph's text
