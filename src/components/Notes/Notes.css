@@ -673,3 +673,33 @@
 }
 
 /* Overflow arrow */
+
+/* ── FAB — new note button ── */
+.nv2-fab {
+  position: absolute;
+  bottom: calc(env(safe-area-inset-bottom) + 1.25rem);
+  right: 1.1rem;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 1.75rem;
+  line-height: 1;
+  font-weight: 300;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.22), 0 1px 4px rgba(0,0,0,0.12);
+  transition: transform 0.15s, box-shadow 0.15s;
+  z-index: 50;
+  /* Prevent text selection on fast tap */
+  -webkit-user-select: none;
+  user-select: none;
+}
+.nv2-fab:active {
+  transform: scale(0.92);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
