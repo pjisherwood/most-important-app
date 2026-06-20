@@ -5,6 +5,7 @@ import { loadPhotos } from './hooks/usePhoto.js'
 import { useAudio } from './hooks/useAudio.js'
 import { isToday, dayKey, calcStreak, getRandomQuote, uid } from './hooks/utils.js'
 import { THEMES, FONT_SIZES, THEME_OVERRIDE_KEY, DEFAULT_DREAM_CATS } from './constants/index.js'
+import { GOLD_FOIL_DATA_URI } from './assets/goldFoil.js'
 
 import HomeTab       from './components/Home/HomeTab.jsx'
 import MeditateTab   from './components/Meditate/MeditateTab.jsx'
@@ -126,6 +127,27 @@ export default function App() {
     ;['enjoy','plan','achieve','highlights','physical'].forEach((s,i) => {
       const vars = ['--btn-enjoy-text','--btn-plan-text','--btn-achieve-text','--btn-highlights-text','--btn-physical-text']
       root.style.setProperty(vars[i], td[s] ? '#1a1a1a' : '#ffffff')
+    })
+
+    // ── Per-button fill style (flat colour vs gold foil texture) + outline ──
+    const fill    = saved.fill    || {}
+    const outline = saved.outline || {}
+    ;['enjoy','plan','achieve','highlights','physical'].forEach((s) => {
+      const imageVar  = `--btn-${s}-image`
+      const tintVar   = `--btn-${s}-tint`
+      const borderVar = `--btn-${s}-border-w`
+      const isGold = fill[s] === 'gold'
+      if (isGold) {
+        const baseColour = saved[s] || t.vars[`--btn-${s}`] || '#A88030'
+        const hex = baseColour.replace('#','')
+        const r = parseInt(hex.slice(0,2),16), g = parseInt(hex.slice(2,4),16), b = parseInt(hex.slice(4,6),16)
+        root.style.setProperty(imageVar, `url("${GOLD_FOIL_DATA_URI}")`)
+        root.style.setProperty(tintVar, `rgba(${r},${g},${b},0.32)`)
+      } else {
+        root.style.setProperty(imageVar, 'none')
+        root.style.setProperty(tintVar, 'transparent')
+      }
+      root.style.setProperty(borderVar, outline[s] ? '1.5px' : '0px')
     })
   }, [])
 
