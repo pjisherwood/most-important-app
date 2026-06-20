@@ -540,7 +540,8 @@ body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.08);
   position: relative;
   overflow: hidden;
-  transition: transform 0.12s, filter 0.12s;
+  transition: transform 0.12s, filter 0.12s, border-width 0.15s;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 /* Pure flat colour buttons — no overlay */
@@ -582,12 +583,54 @@ body {
   line-height: 1;
 }
 
-/* Themed buttons — flat solid colour with shadow */
-.btn-now       { background: var(--btn-enjoy);      color: var(--btn-enjoy-text, #fff); }
-.btn-plan      { background: var(--btn-plan);        color: var(--btn-plan-text, #fff); }
-.btn-insp      { background: var(--btn-achieve);     color: var(--btn-achieve-text, #fff); }
-.btn-highlights{ background: var(--btn-highlights);  color: var(--btn-highlights-text, #fff); }
-.btn-physical  { background: var(--btn-physical);    color: var(--btn-physical-text, #fff); }
+/* Themed buttons — flat colour by default; gold-foil texture
+   and outline border are switched on per-button via CSS variables
+   set in App.jsx (applyTheme), controlled from the theme editor. */
+.btn-now {
+  background-color: var(--btn-enjoy);
+  color: var(--btn-enjoy-text, #fff);
+  background-image: linear-gradient(var(--btn-enjoy-tint, transparent), var(--btn-enjoy-tint, transparent)), var(--btn-enjoy-image, none);
+  background-blend-mode: multiply;
+  background-size: cover;
+  background-position: center;
+  border: var(--btn-enjoy-border-w, 0px) solid rgba(255,255,255,0.55);
+}
+.btn-plan {
+  background-color: var(--btn-plan);
+  color: var(--btn-plan-text, #fff);
+  background-image: linear-gradient(var(--btn-plan-tint, transparent), var(--btn-plan-tint, transparent)), var(--btn-plan-image, none);
+  background-blend-mode: multiply;
+  background-size: cover;
+  background-position: center;
+  border: var(--btn-plan-border-w, 0px) solid rgba(255,255,255,0.55);
+}
+.btn-insp {
+  background-color: var(--btn-achieve);
+  color: var(--btn-achieve-text, #fff);
+  background-image: linear-gradient(var(--btn-achieve-tint, transparent), var(--btn-achieve-tint, transparent)), var(--btn-achieve-image, none);
+  background-blend-mode: multiply;
+  background-size: cover;
+  background-position: center;
+  border: var(--btn-achieve-border-w, 0px) solid rgba(255,255,255,0.55);
+}
+.btn-highlights {
+  background-color: var(--btn-highlights);
+  color: var(--btn-highlights-text, #fff);
+  background-image: linear-gradient(var(--btn-highlights-tint, transparent), var(--btn-highlights-tint, transparent)), var(--btn-highlights-image, none);
+  background-blend-mode: multiply;
+  background-size: cover;
+  background-position: center;
+  border: var(--btn-highlights-border-w, 0px) solid rgba(255,255,255,0.55);
+}
+.btn-physical {
+  background-color: var(--btn-physical);
+  color: var(--btn-physical-text, #fff);
+  background-image: linear-gradient(var(--btn-physical-tint, transparent), var(--btn-physical-tint, transparent)), var(--btn-physical-image, none);
+  background-blend-mode: multiply;
+  background-size: cover;
+  background-position: center;
+  border: var(--btn-physical-border-w, 0px) solid rgba(255,255,255,0.55);
+}
 
 /* ══════════════════════════════════════════════
    SPARKLE
