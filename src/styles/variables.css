@@ -31,6 +31,12 @@
   --btn-highlights-dk: #782010;
   --btn-physical: #C06040;
   --btn-physical-dk: #904020;
+  /* Per-button style options: gold-foil fill + outline (off by default) */
+  --btn-enjoy-image: none;      --btn-enjoy-tint: transparent;      --btn-enjoy-border-w: 0px;
+  --btn-plan-image: none;       --btn-plan-tint: transparent;       --btn-plan-border-w: 0px;
+  --btn-achieve-image: none;    --btn-achieve-tint: transparent;    --btn-achieve-border-w: 0px;
+  --btn-highlights-image: none; --btn-highlights-tint: transparent; --btn-highlights-border-w: 0px;
+  --btn-physical-image: none;   --btn-physical-tint: transparent;   --btn-physical-border-w: 0px;
 }
 
 html[data-theme="cyan-teal"] {
