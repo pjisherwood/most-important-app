@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { THEMES, THEME_OVERRIDE_KEY, FONT_SIZES } from '../../constants/index.js'
 import { LS, KEYS } from '../../hooks/useStorage.js'
+import { GOLD_FOIL_DATA_URI } from '../../assets/goldFoil.js'
 import './Settings.css'
 
 // ── Luminance → dark text needed? ─────────────
@@ -10,6 +11,13 @@ function needsDarkText(hex) {
   const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16)
   const L = [r,g,b].map(c => { const s=c/255; return s<=0.03928?s/12.92:Math.pow((s+0.055)/1.055,2.4) })
   return 0.2126*L[0]+0.7152*L[1]+0.0722*L[2] > 0.35
+}
+
+// ── Hex → rgba string (for gold-foil tint overlay) ─
+function hexToRgba(hex, alpha) {
+  if (!hex || hex.length < 7) return `rgba(168,128,48,${alpha})`
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16)
+  return `rgba(${r},${g},${b},${alpha})`
 }
 
 // ── Suggest a theme name from colours ─────────
@@ -260,7 +268,7 @@ const SLOTS = [
 ]
 
 // ── Mini preview ──────────────────────────────
-function MiniPreview({ themeKey, colours, textDark, activeSlot, onSelectSlot }) {
+function MiniPreview({ themeKey, colours, textDark, fill, outline, activeSlot, onSelectSlot }) {
   const base = THEMES[themeKey]?.vars || {}
   const get = (slot, fallbackVar) => colours[slot] || base[fallbackVar] || '#888'
 
@@ -271,18 +279,30 @@ function MiniPreview({ themeKey, colours, textDark, activeSlot, onSelectSlot }) 
   const highCol   = get('highlights','--btn-highlights')
   const physCol   = get('physical','--btn-physical')
 
-  const btnStyle = (slot, col) => ({
-    borderRadius: 8, height: 22, display: 'flex', alignItems: 'center',
-    justifyContent: 'center', cursor: 'pointer',
-    background: col,
-    outline: activeSlot === slot ? '3px solid rgba(0,0,0,0.45)' : 'none',
-    outlineOffset: -2, boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-    marginBottom: 4,
-  })
+  const btnStyle = (slot, col) => {
+    const isGold = fill[slot] === 'gold'
+    const hasOutline = !!outline[slot]
+    return {
+      borderRadius: 8, height: 22, display: 'flex', alignItems: 'center',
+      justifyContent: 'center', cursor: 'pointer',
+      backgroundColor: col,
+      backgroundImage: isGold
+        ? `linear-gradient(${hexToRgba(col, 0.32)}, ${hexToRgba(col, 0.32)}), url("${GOLD_FOIL_DATA_URI}")`
+        : 'none',
+      backgroundBlendMode: 'multiply',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      border: hasOutline ? '1.5px solid rgba(255,255,255,0.65)' : '1.5px solid transparent',
+      outline: activeSlot === slot ? '3px solid rgba(0,0,0,0.45)' : 'none',
+      outlineOffset: -2, boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+      marginBottom: 4,
+    }
+  }
 
   const labelStyle = (slot) => ({
     fontFamily: 'var(--font-display)', fontSize: '0.68rem',
     color: textDark[slot] ? '#1a1a1a' : '#fff', fontWeight: 500,
+    textShadow: fill[slot] === 'gold' ? '0 1px 2px rgba(0,0,0,0.25)' : 'none',
   })
 
   return (
@@ -338,6 +358,8 @@ function ThemeEditor({ themeKey, onClose, onThemeChange }) {
   })
 
   const [textDark, setTextDark] = useState(() => saved.textDark || {})
+  const [fill, setFill] = useState(() => saved.fill || {})
+  const [outline, setOutline] = useState(() => saved.outline || {})
   const [manualOverride, setManualOverride] = useState({}) // tracks slots user has manually toggled
   const [activeSlot, setActiveSlot] = useState('header')
   const [savedThemes, setSavedThemes] = useState(() => LS.get('ci-saved-themes', []))
@@ -381,17 +403,60 @@ function ThemeEditor({ themeKey, onClose, onThemeChange }) {
     const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16)
     const dk = '#' + [r,g,b].map(c => Math.max(0,Math.round(c*0.72)).toString(16).padStart(2,'0')).join('')
     vars.forEach((v, i) => root.style.setProperty(v, i === 0 ? hex : dk))
+    // If gold texture is active on this slot, refresh its tint to match the new colour
+    if (isBtn && fill[activeSlot] === 'gold') {
+      root.style.setProperty(`--btn-${activeSlot}-tint`, hexToRgba(hex, 0.32))
+    }
 
     // Save and propagate
-    const overrides = { ...newColours, textDark: newTextDark }
+    const overrides = { ...newColours, textDark: newTextDark, fill, outline }
     LS.set(overrideKey, overrides)
     onThemeChange(themeKey, overrides)
-  }, [colours, activeSlot, isBtn, textDark, manualOverride, overrideKey, themeKey, onThemeChange])
+  }, [colours, activeSlot, isBtn, textDark, manualOverride, fill, outline, overrideKey, themeKey, onThemeChange])
+
+  // ── Gold-foil texture toggle (per button) ────
+  const handleFillToggle = useCallback(() => {
+    if (!isBtn) return
+    const isGold = fill[activeSlot] === 'gold'
+    const newFill = { ...fill, [activeSlot]: isGold ? 'colour' : 'gold' }
+    setFill(newFill)
+
+    const root = document.documentElement
+    const hex = colours[activeSlot] || base[CSS_MAP[activeSlot]?.[0]] || '#A88030'
+    if (!isGold) {
+      root.style.setProperty(`--btn-${activeSlot}-image`, `url("${GOLD_FOIL_DATA_URI}")`)
+      root.style.setProperty(`--btn-${activeSlot}-tint`, hexToRgba(hex, 0.32))
+    } else {
+      root.style.setProperty(`--btn-${activeSlot}-image`, 'none')
+      root.style.setProperty(`--btn-${activeSlot}-tint`, 'transparent')
+    }
+
+    const overrides = { ...colours, textDark, fill: newFill, outline }
+    LS.set(overrideKey, overrides)
+    onThemeChange(themeKey, overrides)
+  }, [isBtn, fill, activeSlot, colours, base, textDark, outline, overrideKey, themeKey, onThemeChange])
+
+  // ── Outline toggle (per button) ───────────────
+  const handleOutlineToggle = useCallback(() => {
+    if (!isBtn) return
+    const isOn = !!outline[activeSlot]
+    const newOutline = { ...outline, [activeSlot]: !isOn }
+    setOutline(newOutline)
+
+    const root = document.documentElement
+    root.style.setProperty(`--btn-${activeSlot}-border-w`, isOn ? '0px' : '1.5px')
+
+    const overrides = { ...colours, textDark, fill, outline: newOutline }
+    LS.set(overrideKey, overrides)
+    onThemeChange(themeKey, overrides)
+  }, [isBtn, outline, activeSlot, colours, textDark, fill, overrideKey, themeKey, onThemeChange])
 
   const handleRestore = () => {
     LS.remove(overrideKey)
     setColours({})
     setTextDark({})
+    setFill({})
+    setOutline({})
     setManualOverride({})
     onThemeChange(themeKey, {})
   }
@@ -447,6 +512,8 @@ function ThemeEditor({ themeKey, onClose, onThemeChange }) {
           themeKey={themeKey}
           colours={colours}
           textDark={textDark}
+          fill={fill}
+          outline={outline}
           activeSlot={activeSlot}
           onSelectSlot={setActiveSlot}
         />
@@ -469,7 +536,7 @@ function ThemeEditor({ themeKey, onClose, onThemeChange }) {
                 const textVars = { enjoy: '--btn-enjoy-text', plan: '--btn-plan-text', physical: '--btn-physical-text', achieve: '--btn-achieve-text', highlights: '--btn-highlights-text' }
                 if (textVars[activeSlot]) document.documentElement.style.setProperty(textVars[activeSlot], newVal ? '#1a1a1a' : '#ffffff')
                 // Save
-                const overrides = { ...colours, textDark: newTextDark }
+                const overrides = { ...colours, textDark: newTextDark, fill, outline }
                 LS.set(overrideKey, overrides)
                 onThemeChange(themeKey, overrides)
               }}
@@ -479,6 +546,26 @@ function ThemeEditor({ themeKey, onClose, onThemeChange }) {
             </div>
           )}
         </div>
+
+        {/* Gold texture + Outline toggles (per button only) */}
+        {isBtn && (
+          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '0.5rem 0.7rem', background: 'rgba(255,255,255,0.65)', borderRadius: 12 }}>
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-hi)' }}>✦ Gold texture</span>
+              <div onClick={handleFillToggle}
+                style={{ width: 36, height: 20, borderRadius: 10, background: fill[activeSlot] === 'gold' ? '#B8860B' : 'rgba(0,0,0,0.18)', position: 'relative', cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0 }}>
+                <div style={{ position: 'absolute', top: 2, left: fill[activeSlot] === 'gold' ? 18 : 2, width: 16, height: 16, borderRadius: '50%', background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
+              </div>
+            </div>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '0.5rem 0.7rem', background: 'rgba(255,255,255,0.65)', borderRadius: 12 }}>
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-hi)' }}>Outline</span>
+              <div onClick={handleOutlineToggle}
+                style={{ width: 36, height: 20, borderRadius: 10, background: outline[activeSlot] ? 'var(--accent)' : 'rgba(0,0,0,0.18)', position: 'relative', cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0 }}>
+                <div style={{ position: 'absolute', top: 2, left: outline[activeSlot] ? 18 : 2, width: 16, height: 16, borderRadius: '50%', background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Picker mode toggle */}
         <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
