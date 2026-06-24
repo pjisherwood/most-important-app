@@ -3,6 +3,7 @@ import { uid, isToday, fmtTime, fmtDateShort, dayKey } from '../../hooks/utils.j
 import CameraButton, { PhotoThumb } from '../shared/CameraButton.jsx'
 import { loadPhotos, deletePhoto } from '../../hooks/usePhoto.js'
 import StatsView from '../shared/StatsView.jsx'
+import WorkoutScreen from './WorkoutScreen.jsx'
 
 export default function StandaloneScreen({
   isActive, onBack,
@@ -15,7 +16,9 @@ export default function StandaloneScreen({
   const [, setPhotoRefresh] = useState(0)
   const [showHistory, setShowHistory] = useState(false)
   const [activeTab, setActiveTab] = useState('entries')
+  const [showWorkout, setShowWorkout] = useState(false)
   const inputRef = useRef(null)
+  const isPhysical = title === 'Physical'
 
   useEffect(() => {
     if (isActive) {
@@ -58,6 +61,19 @@ export default function StandaloneScreen({
 
   return (
     <div className={'detail-screen' + (isActive ? ' active' : '')}>
+      {/* Workout overlay — Physical tab only */}
+      {isPhysical && (
+        <WorkoutScreen
+          isActive={showWorkout}
+          onBack={() => setShowWorkout(false)}
+          onLogEntry={text => {
+            const entry = { id: uid(), ts: new Date().toISOString(), text, sessionId: sessionId || null, done: false }
+            setEntries(prev => [entry, ...prev])
+            refreshQuote()
+          }}
+          headerBg={headerBg}
+        />
+      )}
       {/* Header */}
       <div className="ds-header" style={{ background: headerBg }}>
         <button className="ds-back" onClick={activeTab !== 'entries' ? () => setActiveTab('entries') : onBack}>&#8249;</button>
@@ -218,6 +234,14 @@ export default function StandaloneScreen({
                 onClick={() => setActiveTab('history')}>
                 History
               </button>
+              {isPhysical && (
+                <button
+                  className="ds-q-btn"
+                  style={{ background: 'var(--btn-physical)', color: '#fff', flex: 1, fontSize: '1.05rem' }}
+                  onClick={() => setShowWorkout(true)}>
+                  💪 Workout
+                </button>
+              )}
             </div>
           </div>
         </>
