@@ -718,3 +718,52 @@ body {
   font-size: 1.1rem;
   color: var(--text-hi);
 }
+
+/* ══════════════════════════════════════════════
+   WORKOUT SCREEN (Physical tab)
+   ══════════════════════════════════════════════ */
+
+.wk-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.82);
+  border-radius: 14px;
+  padding: 10px 10px 10px 14px;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
+  border: 1.5px solid transparent;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+.wk-row-flash {
+  border-color: var(--btn-physical, #C06040);
+  box-shadow: 0 0 0 3px rgba(192, 96, 64, 0.25);
+}
+.wk-ex-name {
+  flex: 1; min-width: 0; background: none; border: none;
+  padding: 0; text-align: left; cursor: pointer;
+}
+.wk-log-btn {
+  flex-shrink: 0; height: 34px; padding: 0 14px; border-radius: 9px; border: none;
+  background: var(--btn-physical, #C06040); color: #fff;
+  font-family: var(--font-body); font-size: 0.82rem; font-weight: 700;
+  letter-spacing: 0.03em; cursor: pointer;
+  box-shadow: 0 2px 8px rgba(192, 96, 64, 0.28);
+  transition: transform 0.12s, filter 0.12s;
+}
+.wk-log-btn:active { transform: scale(0.96); filter: brightness(0.9); }
+.wk-sets {
+  margin: -4px 0 10px 4px; padding: 6px 10px 8px;
+  border-left: 2px solid rgba(192, 96, 64, 0.2);
+}
+.wk-add-btn {
+  width: 100%; height: 48px; border-radius: 14px;
+  border: 2px dashed rgba(192, 96, 64, 0.3);
+  background: rgba(255, 255, 255, 0.45);
+  color: var(--btn-physical, #C06040);
+  font-family: var(--font-display); font-size: 1rem;
+  cursor: pointer; display: flex; align-items: center;
+  justify-content: center; gap: 7px; margin-top: 4px;
+  transition: background 0.15s;
+}
+.wk-add-btn:active { background: rgba(192, 96, 64, 0.08); }
