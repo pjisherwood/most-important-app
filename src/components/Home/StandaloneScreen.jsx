@@ -68,7 +68,7 @@ export default function StandaloneScreen({
           onBack={() => setShowWorkout(false)}
           onLogEntry={text => {
             const entry = { id: uid(), ts: new Date().toISOString(), text, sessionId: sessionId || null, done: false }
-            setEntries(prev => [entry, ...prev])
+            setEntries([entry, ...entries])
             refreshQuote()
           }}
           headerBg={headerBg}
