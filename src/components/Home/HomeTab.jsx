@@ -37,7 +37,6 @@ export default function HomeTab({
   const [currentHlSess,    setCurrentHlSess]    = useState(null)
   const [currentPhysSess,  setCurrentPhysSess]  = useState(null)
   const [todayDraft, setTodayDraft] = useState('')
-  const [selectedProjectId, setSelectedProjectId] = useState(null) // project selected in home input
   const [recentPhotos, setRecentPhotos] = useState(() => loadPhotos())
 
   // Refresh photos when deleted from another screen (e.g. History)
@@ -70,24 +69,11 @@ export default function HomeTab({
     refreshQuote()
   }
 
-  // ── Log a free moment (or project entry) ─────
+  // ── Log a free moment ────────────────────────
   const logToday = (text, e) => {
     if (!text.trim()) return
-    if (selectedProjectId) {
-      // Log to the selected project's timeline
-      const proj = projects.find(p => p.id === selectedProjectId)
-      if (proj) {
-        const entry = { id: uid(), ts: new Date().toISOString(), text: text.trim() }
-        const updatedProj = { ...proj, entries: [entry, ...proj.entries] }
-        setProjects(projects.map(p => p.id === selectedProjectId ? updatedProj : p))
-        // Also write to todayEntries so it shows on the home timeline
-        const todayEntry = { id: uid(), ts: new Date().toISOString(), label: text.trim(), projectId: selectedProjectId, projectName: proj.name, projectColour: proj.colour }
-        setTodayEntries([todayEntry, ...todayEntries])
-      }
-    } else {
-      const entry = { id: uid(), ts: new Date().toISOString(), label: text.trim() }
-      setTodayEntries([entry, ...todayEntries])
-    }
+    const entry = { id: uid(), ts: new Date().toISOString(), label: text.trim() }
+    setTodayEntries([entry, ...todayEntries])
     refreshQuote()
     if (e) fireSparkle(e)
   }
@@ -352,6 +338,10 @@ export default function HomeTab({
         onBack={() => setActiveScreen(null)}
         projects={projects}
         setProjects={setProjects}
+        onAddToday={(text, proj) => {
+          const entry = { id: uid(), ts: new Date().toISOString(), label: text, projectId: proj.id, projectName: proj.name, projectColour: proj.colour }
+          setTodayEntries([entry, ...todayEntries])
+        }}
       />
 
       <StandaloneScreen
@@ -459,36 +449,8 @@ export default function HomeTab({
                   }
                 }
               }}
-              placeholder={selectedProjectId
-                ? `Add to ${projects.find(p => p.id === selectedProjectId)?.name || 'project'}…`
-                : 'A moment worth remembering…'}
+              placeholder="A moment worth remembering…"
             />
-            {/* Project selector */}
-            {projects.length > 0 && (
-              <select
-                value={selectedProjectId || ''}
-                onChange={e => setSelectedProjectId(e.target.value || null)}
-                style={{
-                  flexShrink: 0,
-                  height: 28, borderRadius: 8,
-                  border: selectedProjectId ? '1.5px solid var(--accent)' : '1.5px solid var(--border)',
-                  background: selectedProjectId
-                    ? (projects.find(p => p.id === selectedProjectId)?.colour || 'var(--accent)')
-                    : 'var(--bg-b)',
-                  color: selectedProjectId ? '#fff' : 'var(--text-lo)',
-                  fontFamily: 'var(--font-body)',
-                  fontSize: '0.68rem', fontWeight: 600,
-                  padding: '0 6px',
-                  cursor: 'pointer',
-                  maxWidth: 100,
-                }}
-              >
-                <option value="">Project</option>
-                {projects.map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-            )}
             <CameraButton
               entryType="today"
               style={{ color: 'var(--accent)' }}
@@ -506,9 +468,9 @@ export default function HomeTab({
         <div className="home-footer">
           <button className="now-btn btn-now"       onClick={() => openEnjoyNow('now')}>Enjoy Now</button>
           <button className="now-btn btn-plan"       onClick={() => openStandalone('plan')}>Planning</button>
+          <button className="now-btn btn-highlights" onClick={() => { setActiveScreen('projects') }}>Projects</button>
           <button className="now-btn btn-physical"   onClick={() => openStandalone('physical')}>Physical</button>
           <button className="now-btn btn-insp"       onClick={() => openStandalone('insp')}>Highlights &amp; Achievements</button>
-          <button className="now-btn btn-highlights" onClick={() => { setActiveScreen('projects') }}>Projects</button>
         </div>
       </div>
     </div>
