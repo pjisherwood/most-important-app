@@ -15,7 +15,7 @@ const PROJECT_COLOURS = [
 ]
 
 // ── Single project timeline screen ──────────────────────────────────────────
-function ProjectScreen({ project, onUpdate, onBack }) {
+function ProjectScreen({ project, onUpdate, onBack, onAddToday }) {
   const [draft,       setDraft]       = useState('')
   const [editingName, setEditingName] = useState(false)
   const [nameVal,     setNameVal]     = useState(project.name)
@@ -35,6 +35,8 @@ function ProjectScreen({ project, onUpdate, onBack }) {
     if (!draft.trim()) return
     const entry = { id: uid(), ts: new Date().toISOString(), text: draft.trim() }
     onUpdate({ ...project, entries: [entry, ...project.entries] })
+    // Mirror to home timeline with project colour label
+    if (onAddToday) onAddToday(draft.trim(), project)
     setDraft('')
     setTimeout(() => inputRef.current?.focus(), 50)
   }
@@ -158,7 +160,7 @@ function ProjectScreen({ project, onUpdate, onBack }) {
 }
 
 // ── Projects list screen ─────────────────────────────────────────────────────
-export default function ProjectsScreen({ isActive, onBack, projects, setProjects }) {
+export default function ProjectsScreen({ isActive, onBack, projects, setProjects, onAddToday }) {
   // openId persists even when screen goes inactive so returning always reopens last project
   const [openId, setOpenId] = useState(null)
   const lastOpenId = useRef(null)
@@ -167,6 +169,10 @@ export default function ProjectsScreen({ isActive, onBack, projects, setProjects
   useEffect(() => {
     if (isActive && lastOpenId.current && !openId) {
       setOpenId(lastOpenId.current)
+    }
+    // When screen is closed via home nav (isActive → false), reset open project
+    if (!isActive) {
+      setOpenId(null)
     }
   }, [isActive])
 
@@ -202,6 +208,7 @@ export default function ProjectsScreen({ isActive, onBack, projects, setProjects
         project={openProject}
         onUpdate={updateProject}
         onBack={() => { lastOpenId.current = openId; setOpenId(null) }}
+        onAddToday={onAddToday}
       />
     )
   }
