@@ -200,7 +200,7 @@ function HabitView({ allEvents }) {
 
 
 // ── Month view ────────────────────────────────
-function MonthView({ allEvents }) {
+function MonthView({ allEvents, onDeletePhoto }) {
   const today = new Date()
   const [viewYear,  setViewYear]  = useState(today.getFullYear())
   const [viewMonth, setViewMonth] = useState(today.getMonth())
@@ -291,7 +291,7 @@ function MonthView({ allEvents }) {
             <div className="sheet-title">{selLabel}</div>
             <div className="sheet-scroll">
               {selEntries.length === 0 && <div className="hist-empty">Nothing logged</div>}
-              {selEntries.map((ev, i) => renderSheetRow(ev, i))}
+              {selEntries.map((ev, i) => renderSheetRow(ev, i, onDeletePhoto))}
             </div>
           </div>
         </div>
@@ -300,7 +300,7 @@ function MonthView({ allEvents }) {
   )
 }
 
-function renderSheetRow(ev, i) {
+function renderSheetRow(ev, i, onDeletePhoto) {
   const enjoyCol = getCssVar('--btn-enjoy') || '#3D82E0'
   const planCol  = getCssVar('--btn-plan')  || '#E07830'
   const achCol   = getCssVar('--btn-achieve') || '#0AABBB'
@@ -316,7 +316,7 @@ function renderSheetRow(ev, i) {
       <span className="hist-time">{fmtTime(ev.ts)}</span>
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: '0.65rem', color: 'var(--text-lo)', marginBottom: 4 }}>{ev.entryType || 'Photo'}</div>
-        <PhotoThumb photo={ev} onDelete={handleDeletePhoto} />
+        <PhotoThumb photo={ev} onDelete={onDeletePhoto} />
       </div>
     </div>
   )
@@ -553,7 +553,7 @@ export default function HistoryTab({ allTimeTotal, allDaySet, allTimeStreak, all
         </div>
       ) : (
         <div className="hist-scroll">
-          <MonthView allEvents={allEvents} />
+          <MonthView allEvents={allEvents} onDeletePhoto={handleDeletePhoto} />
         </div>
       )}
     </div>
