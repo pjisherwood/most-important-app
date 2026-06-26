@@ -37,6 +37,7 @@ export default function HomeTab({
   const [currentHlSess,    setCurrentHlSess]    = useState(null)
   const [currentPhysSess,  setCurrentPhysSess]  = useState(null)
   const [todayDraft, setTodayDraft] = useState('')
+  const [selectedProjectId, setSelectedProjectId] = useState(null) // project selected in home input
   const [recentPhotos, setRecentPhotos] = useState(() => loadPhotos())
 
   // Refresh photos when deleted from another screen (e.g. History)
@@ -69,11 +70,24 @@ export default function HomeTab({
     refreshQuote()
   }
 
-  // ── Log a free moment ─────────────────────────
+  // ── Log a free moment (or project entry) ─────
   const logToday = (text, e) => {
     if (!text.trim()) return
-    const entry = { id: uid(), ts: new Date().toISOString(), label: text.trim() }
-    setTodayEntries([entry, ...todayEntries])
+    if (selectedProjectId) {
+      // Log to the selected project's timeline
+      const proj = projects.find(p => p.id === selectedProjectId)
+      if (proj) {
+        const entry = { id: uid(), ts: new Date().toISOString(), text: text.trim() }
+        const updatedProj = { ...proj, entries: [entry, ...proj.entries] }
+        setProjects(projects.map(p => p.id === selectedProjectId ? updatedProj : p))
+        // Also write to todayEntries so it shows on the home timeline
+        const todayEntry = { id: uid(), ts: new Date().toISOString(), label: text.trim(), projectId: selectedProjectId, projectName: proj.name, projectColour: proj.colour }
+        setTodayEntries([todayEntry, ...todayEntries])
+      }
+    } else {
+      const entry = { id: uid(), ts: new Date().toISOString(), label: text.trim() }
+      setTodayEntries([entry, ...todayEntries])
+    }
     refreshQuote()
     if (e) fireSparkle(e)
   }
@@ -182,13 +196,21 @@ export default function HomeTab({
       )
     }
 
-    if (ev.type === 'today') return (
-      <div key={ev.id} className="t-row" style={{ background: paleTint(btnColours.today) }}>
-        <span className="t-time">{fmtTime(ev.ts)}</span>
-        <span className="t-text">{ev.text}</span>
-        <button className="t-del" onClick={() => setTodayEntries(todayEntries.filter(e => e.id !== ev.id))}>&#10005;</button>
-      </div>
-    )
+    if (ev.type === 'today') {
+      const isProject = !!ev.projectId
+      const bg = isProject ? paleTint(ev.projectColour || '#475569') : paleTint(btnColours.today)
+      const timeCol = isProject ? (ev.projectColour || '#475569') : undefined
+      return (
+        <div key={ev.id} className="t-row" style={{ background: bg }}>
+          <span className="t-time" style={timeCol ? { color: timeCol } : {}}>{fmtTime(ev.ts)}</span>
+          <span className="t-text">
+            {isProject && <span style={{ fontWeight: 600, color: ev.projectColour, marginRight: 4 }}>{ev.projectName} ·</span>}
+            {ev.text}
+          </span>
+          <button className="t-del" onClick={() => setTodayEntries(todayEntries.filter(e => e.id !== ev.id))}>&#10005;</button>
+        </div>
+      )
+    }
 
     if (ev.type === 'pause') return (
       <div key={ev.sessionId}>
@@ -437,8 +459,36 @@ export default function HomeTab({
                   }
                 }
               }}
-              placeholder="A moment worth remembering…"
+              placeholder={selectedProjectId
+                ? `Add to ${projects.find(p => p.id === selectedProjectId)?.name || 'project'}…`
+                : 'A moment worth remembering…'}
             />
+            {/* Project selector */}
+            {projects.length > 0 && (
+              <select
+                value={selectedProjectId || ''}
+                onChange={e => setSelectedProjectId(e.target.value || null)}
+                style={{
+                  flexShrink: 0,
+                  height: 28, borderRadius: 8,
+                  border: selectedProjectId ? '1.5px solid var(--accent)' : '1.5px solid var(--border)',
+                  background: selectedProjectId
+                    ? (projects.find(p => p.id === selectedProjectId)?.colour || 'var(--accent)')
+                    : 'var(--bg-b)',
+                  color: selectedProjectId ? '#fff' : 'var(--text-lo)',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '0.68rem', fontWeight: 600,
+                  padding: '0 6px',
+                  cursor: 'pointer',
+                  maxWidth: 100,
+                }}
+              >
+                <option value="">Project</option>
+                {projects.map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            )}
             <CameraButton
               entryType="today"
               style={{ color: 'var(--accent)' }}
