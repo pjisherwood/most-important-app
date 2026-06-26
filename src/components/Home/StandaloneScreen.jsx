@@ -11,6 +11,7 @@ export default function StandaloneScreen({
   title, subtitle, historyTitle, placeholder, icon,
   headerBg, historyBtnStyle, accentColour, message,
   sessionId, checkable,
+  savedWorkouts, setSavedWorkouts,
 }) {
   const [draft, setDraft] = useState('')
   const [, setPhotoRefresh] = useState(0)
@@ -66,12 +67,14 @@ export default function StandaloneScreen({
         <WorkoutScreen
           isActive={showWorkout}
           onBack={() => setShowWorkout(false)}
-          onLogEntry={text => {
-            const entry = { id: uid(), ts: new Date().toISOString(), text, sessionId: sessionId || null, done: false }
+          onLogEntry={(text, workoutSessId) => {
+            const entry = { id: uid(), ts: new Date().toISOString(), text, sessionId: workoutSessId || sessionId || null, done: false }
             setEntries([entry, ...entries])
             refreshQuote()
           }}
           headerBg={headerBg}
+          savedWorkouts={savedWorkouts}
+          setSavedWorkouts={setSavedWorkouts}
         />
       )}
       {/* Header */}
