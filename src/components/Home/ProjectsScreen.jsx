@@ -153,24 +153,27 @@ function ProjectScreen({ project, onUpdate, onBack }) {
           </div>
         ))}
       </div>
-
-      {/* Footer */}
-      <div className="ds-footer">
-        <button
-          className="ds-q-btn"
-          style={{ background: project.colour, opacity: draft.trim() ? 1 : 0.55 }}
-          onClick={submit}
-        >
-          Add to timeline
-        </button>
-      </div>
     </div>
   )
 }
 
 // ── Projects list screen ─────────────────────────────────────────────────────
 export default function ProjectsScreen({ isActive, onBack, projects, setProjects }) {
+  // openId persists even when screen goes inactive so returning always reopens last project
   const [openId, setOpenId] = useState(null)
+  const lastOpenId = useRef(null)
+
+  // Restore last open project when screen becomes active again
+  useEffect(() => {
+    if (isActive && lastOpenId.current && !openId) {
+      setOpenId(lastOpenId.current)
+    }
+  }, [isActive])
+
+  const handleSetOpenId = (id) => {
+    lastOpenId.current = id
+    setOpenId(id)
+  }
 
   const openProject = projects.find(p => p.id === openId)
 
@@ -179,7 +182,7 @@ export default function ProjectsScreen({ isActive, onBack, projects, setProjects
     const p = { id: uid(), name: 'New project', colour, entries: [], createdAt: new Date().toISOString() }
     const updated = [...projects, p]
     setProjects(updated)
-    setOpenId(p.id)
+    handleSetOpenId(p.id)
   }
 
   const updateProject = (updated) => {
@@ -188,6 +191,7 @@ export default function ProjectsScreen({ isActive, onBack, projects, setProjects
 
   const deleteProject = (id) => {
     setProjects(projects.filter(p => p.id !== id))
+    lastOpenId.current = null
     setOpenId(null)
   }
 
@@ -197,7 +201,7 @@ export default function ProjectsScreen({ isActive, onBack, projects, setProjects
       <ProjectScreen
         project={openProject}
         onUpdate={updateProject}
-        onBack={() => setOpenId(null)}
+        onBack={() => { lastOpenId.current = openId; setOpenId(null) }}
       />
     )
   }
@@ -230,7 +234,7 @@ export default function ProjectsScreen({ isActive, onBack, projects, setProjects
               key={p.id}
               className="proj-card"
               style={{ borderLeft: `4px solid ${p.colour}` }}
-              onClick={() => setOpenId(p.id)}
+              onClick={() => handleSetOpenId(p.id)}
             >
               <div className="proj-card-top">
                 <div className="proj-card-name" style={{ color: p.colour }}>{p.name}</div>
