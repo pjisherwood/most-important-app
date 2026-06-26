@@ -106,8 +106,17 @@ export default function HomeTab({
   const todayTimeline = useMemo(() => {
     const tl = []
 
-    todayEntries.filter(e => isToday(e.ts))
+    todayEntries.filter(e => isToday(e.ts) && e.type !== 'project')
       .forEach(e => tl.push({ type: 'today', ts: e.ts, text: e.label, id: e.id }))
+
+    // Group project entries by projectId — collapsible like planning/achievements
+    const projectMap = {}
+    todayEntries.filter(e => isToday(e.ts) && e.type === 'project').forEach(e => {
+      const pid = e.projectId
+      if (!projectMap[pid]) projectMap[pid] = { type: 'project', ts: e.ts, projectId: pid, projectName: e.projectName, projectColour: e.projectColour, entries: [] }
+      projectMap[pid].entries.push(e)
+    })
+    Object.values(projectMap).forEach(g => tl.push(g))
 
     // Add photos - will be grouped into pairs when rendering
     // Only show 'today' prompt photos on home timeline - others belong to their screens
@@ -183,20 +192,33 @@ export default function HomeTab({
     }
 
     if (ev.type === 'today') {
-      const isProject = !!ev.projectId
-      const bg = isProject ? paleTint(ev.projectColour || '#475569') : paleTint(btnColours.today)
-      const timeCol = isProject ? (ev.projectColour || '#475569') : undefined
+      const bg = paleTint(btnColours.today)
       return (
         <div key={ev.id} className="t-row" style={{ background: bg }}>
-          <span className="t-time" style={timeCol ? { color: timeCol } : {}}>{fmtTime(ev.ts)}</span>
-          <span className="t-text">
-            {isProject && <span style={{ fontWeight: 600, color: ev.projectColour, marginRight: 4 }}>{ev.projectName} ·</span>}
-            {ev.text}
-          </span>
+          <span className="t-time">{fmtTime(ev.ts)}</span>
+          <span className="t-text">{ev.text}</span>
           <button className="t-del" onClick={() => setTodayEntries(todayEntries.filter(e => e.id !== ev.id))}>&#10005;</button>
         </div>
       )
     }
+
+    if (ev.type === 'project') return (
+      <div key={ev.projectId}>
+        <div className="t-row" style={{ background: paleTint(ev.projectColour || '#475569'), cursor: 'pointer' }}
+          onClick={() => setExpandedSess(p => ({ ...p, ['proj-' + ev.projectId]: !p['proj-' + ev.projectId] }))}>
+          <span className="t-time" style={{ color: ev.projectColour }}>{fmtTime(ev.ts)}</span>
+          <span className="t-text">
+            <span style={{ fontWeight: 700, color: ev.projectColour }}>{ev.projectName}</span>
+            {" · Project"}
+            {ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' thing' + (ev.entries.length === 1 ? '' : 's') : ''}
+          </span>
+          {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['proj-' + ev.projectId] ? '▲' : '▼'}</span>}
+        </div>
+        {expandedSess['proj-' + ev.projectId] && ev.entries?.map((e, j) => (
+          <div key={j} className="t-sub-row">· {e.label}</div>
+        ))}
+      </div>
+    )
 
     if (ev.type === 'pause') return (
       <div key={ev.sessionId}>
@@ -339,7 +361,7 @@ export default function HomeTab({
         projects={projects}
         setProjects={setProjects}
         onAddToday={(text, proj) => {
-          const entry = { id: uid(), ts: new Date().toISOString(), label: text, projectId: proj.id, projectName: proj.name, projectColour: proj.colour }
+          const entry = { id: uid(), ts: new Date().toISOString(), label: text, type: 'project', projectId: proj.id, projectName: proj.name, projectColour: proj.colour }
           setTodayEntries([entry, ...todayEntries])
         }}
       />
