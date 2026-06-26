@@ -76,6 +76,8 @@ export default function App() {
   })
   const [dreams,    setDreamsRaw]    = useState(() => LS.get(KEYS.DREAMS, []))
   const [dreamCats, setDreamCatsRaw] = useState(() => LS.get(KEYS.DREAM_CATS, DEFAULT_DREAM_CATS))
+  const [projects,       setProjectsRaw]      = useState(() => LS.get(KEYS.PROJECTS, []))
+  const [savedWorkouts,  setSavedWorkoutsRaw] = useState(() => LS.get(KEYS.SAVED_WORKOUTS, []))
 
   // Persist wrappers
   const setNowItems     = v => { setNowItemsRaw(v);     LS.set(KEYS.NOW,         v) }
@@ -93,6 +95,8 @@ export default function App() {
   const setNoteFolders  = v => { setNoteFoldersRaw(v);  LS.set(KEYS.FOLDERS,     v) }
   const setDreams       = v => { setDreamsRaw(v);       LS.set(KEYS.DREAMS,      v) }
   const setDreamCats    = v => { setDreamCatsRaw(v);    LS.set(KEYS.DREAM_CATS,  v) }
+  const setProjects      = v => { setProjectsRaw(v);      LS.set(KEYS.PROJECTS,       v) }
+  const setSavedWorkouts = v => { setSavedWorkoutsRaw(v); LS.set(KEYS.SAVED_WORKOUTS, v) }
 
   // ── Theme ────────────────────────────────────
   const [themeKey,    setThemeKeyRaw]    = useState(() => LS.get(KEYS.THEME, 'vivid'))
@@ -375,6 +379,8 @@ export default function App() {
           setActiveScreen={setHomeScreen}
           activityLog={activityLog}
           logActivity={logActivity}
+          projects={projects}             setProjects={setProjects}
+          savedWorkouts={savedWorkouts}   setSavedWorkouts={setSavedWorkouts}
         />
       )}
 
