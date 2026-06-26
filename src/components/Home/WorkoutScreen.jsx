@@ -277,10 +277,13 @@ function ExerciseRow({ row, onUpdate, onLog, onRemove, isFlashing }) {
 }
 
 // ── WorkoutScreen — the full workout view ─────────────────────────────────────
-export default function WorkoutScreen({ isActive, onBack, onLogEntry, headerBg }) {
+export default function WorkoutScreen({ isActive, onBack, onLogEntry, headerBg, savedWorkouts, setSavedWorkouts }) {
   const [rows,        setRows]        = useState([])
   const [flashId,     setFlashId]     = useState(null)
   const [showPicker,  setShowPicker]  = useState(false)
+  const [showSaveSheet, setShowSaveSheet] = useState(false)
+  const [saveNameVal,   setSaveNameVal]   = useState('')
+  const workoutSessId = useRef(uid()) // stable session ID for the whole workout — groups all sets in History
 
   // Open the exercise picker as soon as the screen becomes active (first open)
   const prevActive = useRef(false)
@@ -288,12 +291,36 @@ export default function WorkoutScreen({ isActive, onBack, onLogEntry, headerBg }
     if (isActive && !prevActive.current) {
       setRows([])
       setShowPicker(true)
+      workoutSessId.current = uid() // fresh session ID each time workout is opened
     }
     prevActive.current = isActive
   }, [isActive])
 
+  const saveNameRef = useRef(null)
+  useEffect(() => { if (showSaveSheet) setTimeout(() => saveNameRef.current?.focus(), 80) }, [showSaveSheet])
+
   const addRow = ex => {
     setRows(prev => [...prev, { id: uid(), exercise: ex, reps: null, weight: null, sets: [] }])
+  }
+
+  // Load a saved workout — replaces current rows
+  const loadWorkout = (workout) => {
+    setRows(workout.exercises.map(ex => ({ id: uid(), exercise: ex, reps: null, weight: null, sets: [] })))
+  }
+
+  // Save current exercises as a named workout
+  const saveWorkout = () => {
+    const name = saveNameVal.trim() || 'My workout'
+    const exercises = rows.filter(r => r.exercise).map(r => r.exercise)
+    if (!exercises.length) { setShowSaveSheet(false); return }
+    const workout = { id: uid(), name, exercises, createdAt: new Date().toISOString() }
+    setSavedWorkouts([workout, ...(savedWorkouts || [])])
+    setSaveNameVal('')
+    setShowSaveSheet(false)
+  }
+
+  const deleteWorkout = (id) => {
+    setSavedWorkouts((savedWorkouts || []).filter(w => w.id !== id))
   }
 
   const updateRow = updated => setRows(prev => prev.map(r => r.id === updated.id ? updated : r))
@@ -307,7 +334,8 @@ export default function WorkoutScreen({ isActive, onBack, onLogEntry, headerBg }
     if (row.weight) text += ` · ${row.weight}kg`
 
     // Write to the shared Physical entries store — appears in History automatically
-    onLogEntry(text)
+    // All sets from this workout share workoutSessId.current so they group as one session
+    onLogEntry(text, workoutSessId.current)
 
     // Track the set locally for display under this row
     const now = new Date()
@@ -338,6 +366,42 @@ export default function WorkoutScreen({ isActive, onBack, onLogEntry, headerBg }
 
       {/* Body */}
       <div className="ds-body" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 5rem)' }}>
+
+        {/* Saved workouts — shown at top if any exist */}
+        {(savedWorkouts || []).length > 0 && (
+          <div style={{ marginBottom: 14 }}>
+            <div className="list-label">Saved workouts — tap to load</div>
+            <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
+              {(savedWorkouts || []).map(w => (
+                <div key={w.id} style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 0 }}>
+                  <button
+                    onClick={() => loadWorkout(w)}
+                    style={{
+                      height: 36, padding: '0 12px', borderRadius: '10px 0 0 10px',
+                      border: '1.5px solid var(--btn-physical, #C06040)', borderRight: 'none',
+                      background: 'rgba(192,96,64,0.08)',
+                      color: 'var(--btn-physical, #C06040)',
+                      fontFamily: 'var(--font-display)', fontSize: '0.88rem',
+                      cursor: 'pointer', whiteSpace: 'nowrap',
+                    }}
+                  >{w.name}</button>
+                  <button
+                    onClick={() => deleteWorkout(w.id)}
+                    style={{
+                      height: 36, width: 28, borderRadius: '0 10px 10px 0',
+                      border: '1.5px solid var(--btn-physical, #C06040)',
+                      background: 'rgba(192,96,64,0.08)',
+                      color: 'rgba(192,96,64,0.55)',
+                      fontFamily: 'var(--font-body)', fontSize: '0.65rem',
+                      cursor: 'pointer',
+                    }}
+                  >✕</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {rows.length === 0 && !showPicker && (
           <div className="ds-empty">Tap + to add your first exercise</div>
         )}
@@ -358,6 +422,23 @@ export default function WorkoutScreen({ isActive, onBack, onLogEntry, headerBg }
           <span style={{ fontSize: '1.25rem', lineHeight: 1, marginTop: -1 }}>+</span>
           Add exercise
         </button>
+
+        {/* Save as workout — only show if there are exercises */}
+        {rows.some(r => r.exercise) && (
+          <button
+            onClick={() => { setSaveNameVal(''); setShowSaveSheet(true) }}
+            style={{
+              width: '100%', height: 40, borderRadius: 14, marginTop: 8,
+              border: '1.5px solid rgba(192,96,64,0.3)',
+              background: 'transparent',
+              color: 'var(--btn-physical, #C06040)',
+              fontFamily: 'var(--font-body)', fontSize: '0.8rem', fontWeight: 600,
+              cursor: 'pointer', letterSpacing: '0.04em',
+            }}
+          >
+            💾 Save as workout
+          </button>
+        )}
       </div>
 
       {/* Exercise picker — opens on mount and when + is tapped */}
@@ -366,6 +447,40 @@ export default function WorkoutScreen({ isActive, onBack, onLogEntry, headerBg }
           onSelect={ex => { addRow(ex); setShowPicker(false) }}
           onClose={() => setShowPicker(false)}
         />
+      )}
+
+      {/* Save workout sheet */}
+      {showSaveSheet && (
+        <BottomSheet onClose={() => setShowSaveSheet(false)}>
+          <div style={{ padding: '8px 20px 20px' }}>
+            <div className="list-label" style={{ marginBottom: 10 }}>Name this workout</div>
+            <div style={{ marginBottom: 8, fontFamily: 'var(--font-display)', fontSize: '0.82rem', color: 'var(--text-lo)' }}>
+              {rows.filter(r => r.exercise).map(r => r.exercise.label).join(', ')}
+            </div>
+            <input
+              ref={saveNameRef}
+              value={saveNameVal}
+              onChange={e => setSaveNameVal(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && saveWorkout()}
+              placeholder="e.g. Morning routine, Chest day…"
+              style={{
+                width: '100%', height: 48, borderRadius: 12,
+                border: '1.5px solid var(--border, #ddd)',
+                padding: '0 14px', fontSize: '1rem',
+                fontFamily: 'var(--font-display)', color: 'var(--text-hi)',
+                background: 'var(--bg-a, #fff)', outline: 'none', marginBottom: 12,
+              }}
+            />
+            <button
+              onClick={saveWorkout}
+              style={{
+                width: '100%', height: 48, borderRadius: 12, border: 'none',
+                background: 'var(--btn-physical, #C06040)', color: '#fff',
+                fontFamily: 'var(--font-display)', fontSize: '1rem', cursor: 'pointer',
+              }}
+            >Save workout</button>
+          </div>
+        </BottomSheet>
       )}
     </div>
   )
