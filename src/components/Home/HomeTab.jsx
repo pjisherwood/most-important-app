@@ -2,6 +2,7 @@ import { useState, useRef, useMemo, useEffect } from 'react'
 import StarSvg from '../shared/StarSvg.jsx'
 import DetailScreen from './DetailScreen.jsx'
 import StandaloneScreen from './StandaloneScreen.jsx'
+import ProjectsScreen from './ProjectsScreen.jsx'
 import CameraButton, { PhotoThumb } from '../shared/CameraButton.jsx'
 import { loadPhotos, deletePhoto } from '../../hooks/usePhoto.js'
 import { uid, isToday, fmtTime, fmtHour, dayKey, paleTint } from '../../hooks/utils.js'
@@ -27,6 +28,8 @@ export default function HomeTab({
   activeScreen, setActiveScreen,
   activityLog,
   logActivity,
+  projects, setProjects,
+  savedWorkouts, setSavedWorkouts,
 }) {
   const [currentSession, setCurrentSession] = useState(null)
   const [currentPlanSess,  setCurrentPlanSess]  = useState(null)
@@ -301,26 +304,32 @@ export default function HomeTab({
 
       <StandaloneScreen
         isActive={activeScreen === 'insp'} onBack={() => setActiveScreen(null)}
-        entries={inspEntries} setEntries={setInspEntries} refreshQuote={refreshQuote}
-        title="Achievement &amp; Progress" historyTitle="Progress History"
-        placeholder="Note an achievement or progress…" icon="⭐"
+        entries={[...inspEntries, ...highlightEntries].sort((a,b) => new Date(b.ts)-new Date(a.ts))}
+        setEntries={merged => {
+          // split merged array back into insp vs highlights by matching ids
+          const inspIds = new Set(inspEntries.map(e => e.id))
+          const hlIds   = new Set(highlightEntries.map(e => e.id))
+          // new entries (not in either set) go to insp by default
+          const newInsp = merged.filter(e => inspIds.has(e.id) || (!hlIds.has(e.id)))
+          const newHl   = merged.filter(e => hlIds.has(e.id))
+          setInspEntries(newInsp)
+          setHighlightEntries(newHl)
+        }}
+        refreshQuote={refreshQuote}
+        title="Highlights &amp; Achievements" historyTitle="Progress History"
+        placeholder="A highlight, achievement or milestone…" icon="⭐"
         headerBg="var(--btn-achieve)"
         historyBtnStyle={{ background: 'rgba(0,160,160,0.15)', color: 'rgba(0,100,110,0.9)', border: '1.5px solid rgba(0,160,160,0.3)' }}
-        message="Even the smallest progress and achievement is worth noticing."
+        message="Notice every highlight and achievement — even the small ones."
         sessionId={currentInspSess}
         accentColour={btnColours.achieve}
       />
 
-      <StandaloneScreen
-        isActive={activeScreen === 'highlights'} onBack={() => setActiveScreen(null)}
-        entries={highlightEntries} setEntries={setHighlightEntries} refreshQuote={refreshQuote}
-        title="Highlights" historyTitle="Highlights History"
-        placeholder="A highlight from today…" icon="✨"
-        headerBg="var(--btn-highlights)"
-        historyBtnStyle={{ background: 'rgba(180,60,140,0.12)', color: 'rgba(130,20,90,0.9)', border: '1.5px solid rgba(180,60,140,0.25)' }}
-        message="Find highlights every day, no matter how small."
-        sessionId={currentHlSess}
-        accentColour={btnColours.highlights}
+      <ProjectsScreen
+        isActive={activeScreen === 'projects'}
+        onBack={() => setActiveScreen(null)}
+        projects={projects}
+        setProjects={setProjects}
       />
 
       <StandaloneScreen
@@ -334,6 +343,8 @@ export default function HomeTab({
         sessionId={currentPhysSess}
         entryType="Physical"
         accentColour={btnColours.physical}
+        savedWorkouts={savedWorkouts}
+        setSavedWorkouts={setSavedWorkouts}
       />
 
       <StandaloneScreen
@@ -444,10 +455,10 @@ export default function HomeTab({
         {/* Footer buttons */}
         <div className="home-footer">
           <button className="now-btn btn-now"       onClick={() => openEnjoyNow('now')}>Enjoy Now</button>
-          <button className="now-btn btn-plan" onClick={() => openStandalone('plan')}>Planning</button>
+          <button className="now-btn btn-plan"       onClick={() => openStandalone('plan')}>Planning</button>
           <button className="now-btn btn-physical"   onClick={() => openStandalone('physical')}>Physical</button>
-          <button className="now-btn btn-insp"       onClick={() => openStandalone('insp')}>Achievement &amp; Progress</button>
-          <button className="now-btn btn-highlights" onClick={() => openStandalone('highlights')}>Highlights</button>
+          <button className="now-btn btn-insp"       onClick={() => openStandalone('insp')}>Highlights &amp; Achievements</button>
+          <button className="now-btn btn-highlights" onClick={() => { setActiveScreen('projects') }}>Projects</button>
         </div>
       </div>
     </div>
