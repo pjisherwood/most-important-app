@@ -66,7 +66,7 @@ export async function describePhotoAsync(photoId, dataUrl) {
           role: 'user',
           content: [
             { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
-            { type: 'text', text: 'Describe this image as a detailed factual record. Read all visible text exactly as written. Describe objects, people, colours, and setting. If you recognise a brand, place, or person, name it as an identification. Prioritise capturing all text completely.' },
+            { type: 'text', text: 'Describe this image as a detailed factual record. Read all visible text exactly as written. Describe objects, people, colours, and setting. If you recognise a brand, place, or person, name it and note it as an identification — for example \'appears to be McDonald\'s\'. Prioritise capturing all visible text completely over brevity. Be thorough.' },
           ],
         }],
       }),
