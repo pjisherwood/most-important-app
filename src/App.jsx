@@ -79,6 +79,17 @@ export default function App() {
   const [projects,       setProjectsRaw]      = useState(() => LS.get(KEYS.PROJECTS, []))
   const [savedWorkouts,  setSavedWorkoutsRaw] = useState(() => LS.get(KEYS.SAVED_WORKOUTS, []))
 
+  // Button config: visibility + custom labels
+  const DEFAULT_BTN_CONFIG = {
+    enjoy:      { visible: true, label: "Enjoy Now" },
+    plan:       { visible: true, label: "Planning" },
+    projects:   { visible: true, label: "Projects" },
+    physical:   { visible: true, label: "Physical" },
+    insp:       { visible: true, label: "Highlights & Achievements" },
+  }
+  const [btnConfig, setBtnConfigRaw] = useState(() => LS.get('mih-btn-config', DEFAULT_BTN_CONFIG))
+  const setBtnConfig = v => { setBtnConfigRaw(v); LS.set('mih-btn-config', v) }
+
   // Persist wrappers
   const setNowItems     = v => { setNowItemsRaw(v);     LS.set(KEYS.NOW,         v) }
   const setJustItems    = v => { setJustItemsRaw(v);    LS.set(KEYS.JUST,        v) }
@@ -321,7 +332,54 @@ export default function App() {
       reader.onload = (ev) => {
         try {
           const data = JSON.parse(ev.target.result)
-          Object.entries(data).forEach(([k, v]) => LS.set(k, v))
+          // Merge-import: for array keys, add only entries missing by id
+          const ARRAY_KEYS = [
+            KEYS.NOW, KEYS.JUST, KEYS.WOULD, KEYS.SESSIONS, KEYS.TODAY,
+            KEYS.INSP, KEYS.PLAN, KEYS.HIGHLIGHTS, KEYS.PHYSICAL,
+            KEYS.ACTIVITY, KEYS.MEDITATIONS, KEYS.NOTES, KEYS.DREAMS,
+            KEYS.PROJECTS,
+          ]
+          let addedCount = 0
+          Object.entries(data).forEach(([k, v]) => {
+            if (ARRAY_KEYS.includes(k) && Array.isArray(v)) {
+              const existing = LS.get(k, [])
+              const existingIds = new Set(existing.map(e => e.id))
+              // For projects, also merge inner entries
+              if (k === KEYS.PROJECTS) {
+                const existingMap = {}
+                existing.forEach(p => { existingMap[p.id] = p })
+                v.forEach(importedProj => {
+                  if (!existingMap[importedProj.id]) {
+                    existingMap[importedProj.id] = importedProj
+                    addedCount++
+                  } else {
+                    // Merge inner project entries
+                    const existingEntryIds = new Set(existingMap[importedProj.id].entries.map(e => e.id))
+                    const newEntries = (importedProj.entries || []).filter(e => !existingEntryIds.has(e.id))
+                    if (newEntries.length) {
+                      existingMap[importedProj.id] = {
+                        ...existingMap[importedProj.id],
+                        entries: [...existingMap[importedProj.id].entries, ...newEntries]
+                          .sort((a, b) => new Date(b.ts) - new Date(a.ts))
+                      }
+                      addedCount += newEntries.length
+                    }
+                  }
+                })
+                LS.set(k, Object.values(existingMap))
+              } else {
+                const newItems = v.filter(e => e.id && !existingIds.has(e.id))
+                if (newItems.length) {
+                  addedCount += newItems.length
+                  LS.set(k, [...existing, ...newItems].sort((a, b) => new Date(b.ts || 0) - new Date(a.ts || 0)))
+                }
+              }
+            } else if (!ARRAY_KEYS.includes(k)) {
+              // Non-array keys (theme, settings etc) — only write if not already set
+              if (LS.get(k, null) === null) LS.set(k, v)
+            }
+          })
+          alert("Merge complete! " + addedCount + " missing entr" + (addedCount === 1 ? "y" : "ies") + " restored.")
           window.location.reload()
         } catch { alert('Could not read backup file.') }
       }
@@ -356,6 +414,9 @@ export default function App() {
           onExport={handleExport}
           onImport={handleImport}
           onShowPrivacy={() => { setShowSettings(false); setPrivacySeen(false) }}
+          btnConfig={btnConfig}
+          setBtnConfig={setBtnConfig}
+          defaultBtnConfig={DEFAULT_BTN_CONFIG}
         />
       )}
 
@@ -381,6 +442,7 @@ export default function App() {
           logActivity={logActivity}
           projects={projects}             setProjects={setProjects}
           savedWorkouts={savedWorkouts}   setSavedWorkouts={setSavedWorkouts}
+          btnConfig={btnConfig}
         />
       )}
 
