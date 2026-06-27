@@ -625,12 +625,74 @@ function ThemeEditor({ themeKey, onClose, onThemeChange }) {
 }
 
 // ── Main Settings Sheet ───────────────────────
+const CLAUDE_PROMPT = "Describe this image as a detailed factual record. Read all visible text exactly as written. Describe objects, people, colours, and setting. If you recognise a brand, place, or person, name it as an identification. Prioritise capturing all text completely."
+
+async function describePhotoWithClaude(dataUrl, apiKey) {
+  const base64 = dataUrl.split(',')[1]
+  const mediaType = dataUrl.startsWith('data:image/png') ? 'image/png' : 'image/jpeg'
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1024,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+          { type: 'text', text: CLAUDE_PROMPT },
+        ],
+      }],
+    }),
+  })
+  if (!res.ok) throw new Error('API error ' + res.status)
+  const data = await res.json()
+  return data.content?.[0]?.text || ''
+}
+
 export default function SettingsSheet({ themeKey, setThemeKey, fontSizeKey, setFontSizeKey, onClose, onExport, onImport, onShowPrivacy, btnConfig, setBtnConfig, defaultBtnConfig }) {
   const [editingTheme, setEditingTheme] = useState(null)
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('mih-claude-key') || '')
   const [showKey, setShowKey] = useState(false)
   const sheetRef = useRef(null)
   const dragStartY = useRef(null)
+
+  /* ONE-TIME PHOTO DESCRIPTION — REMOVE AFTER USE */
+  const [batchStatus, setBatchStatus] = useState(null) // null | 'running' | 'done'
+  const [batchMsg, setBatchMsg] = useState('')
+
+  const runBatchDescribe = async () => {
+    const key = localStorage.getItem('mih-claude-key')
+    if (!key) { alert('Please save a Claude API key first.'); return }
+    setBatchStatus('running')
+    const PHOTO_KEY = 'mih-photos'
+    const photos = JSON.parse(localStorage.getItem(PHOTO_KEY) || '[]')
+    const todo = photos.filter(p => p.dataUrl && !p.photoDesc)
+    const total = todo.length
+    if (total === 0) { setBatchMsg('All photos already described.'); setBatchStatus('done'); return }
+    let done = 0
+    for (const photo of todo) {
+      setBatchMsg(`Describing photo ${done + 1} of ${total}…`)
+      try {
+        const desc = await describePhotoWithClaude(photo.dataUrl, key)
+        const all = JSON.parse(localStorage.getItem(PHOTO_KEY) || '[]')
+        const updated = all.map(p => p.id === photo.id ? { ...p, photoDesc: desc } : p)
+        localStorage.setItem(PHOTO_KEY, JSON.stringify(updated))
+        done++
+      } catch (e) {
+        console.warn('Batch describe failed for photo', photo.id, e)
+      }
+      await new Promise(r => setTimeout(r, 500))
+    }
+    setBatchMsg(`Done — ${done} photo${done === 1 ? '' : 's'} described`)
+    setBatchStatus('done')
+  }
+  /* END ONE-TIME PHOTO DESCRIPTION */
 
   const handleTouchStart = (e) => { dragStartY.current = e.touches[0].clientY }
   const handleTouchEnd = (e) => {
@@ -787,6 +849,24 @@ export default function SettingsSheet({ themeKey, setThemeKey, fontSizeKey, setF
               Used for AI photo descriptions. Stored locally only — never sent anywhere except Anthropic.
             </div>
           </div>
+
+          {/* ONE-TIME PHOTO DESCRIPTION — REMOVE AFTER USE */}
+          <div className="s-card">
+            <div className="s-card-title">One-Time Setup</div>
+            <button
+              onClick={runBatchDescribe}
+              disabled={batchStatus === 'running' || batchStatus === 'done'}
+              style={{ width: '100%', padding: '8px 0', borderRadius: 10, border: 'none', background: batchStatus === 'done' ? 'var(--border)' : 'var(--accent-soft)', color: batchStatus === 'done' ? 'var(--text-lo)' : 'var(--accent)', fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '0.82rem', cursor: batchStatus ? 'default' : 'pointer' }}
+            >Describe All My Photos</button>
+            {batchMsg ? (
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-lo)', fontFamily: 'var(--font-body)', marginTop: 6, textAlign: 'center' }}>{batchMsg}</div>
+            ) : (
+              <div style={{ fontSize: '0.65rem', color: 'var(--text-lo)', fontFamily: 'var(--font-body)', marginTop: 6, lineHeight: 1.4 }}>
+                Sends each existing photo to Claude to generate a searchable description. Skips already-described photos. Requires API key above.
+              </div>
+            )}
+          </div>
+          {/* END ONE-TIME PHOTO DESCRIPTION */}
 
           {/* Data */}
           <div className="s-card">
