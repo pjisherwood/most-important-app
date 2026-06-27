@@ -30,6 +30,7 @@ export default function HomeTab({
   logActivity,
   projects, setProjects,
   savedWorkouts, setSavedWorkouts,
+  btnConfig,
 }) {
   const [currentSession, setCurrentSession] = useState(null)
   const [currentPlanSess,  setCurrentPlanSess]  = useState(null)
@@ -194,25 +195,29 @@ export default function HomeTab({
     if (ev.type === 'today') {
       const bg = paleTint(btnColours.today)
       return (
-        <div key={ev.id} className="t-row" style={{ background: bg }}>
-          <span className="t-time">{fmtTime(ev.ts)}</span>
-          <span className="t-text">{ev.text}</span>
-          <button className="t-del" onClick={() => setTodayEntries(todayEntries.filter(e => e.id !== ev.id))}>&#10005;</button>
+        <div key={ev.id} className="t-row" style={{ background: bg, flexDirection: 'column', alignItems: 'stretch', gap: 2, padding: '5px 10px 7px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span className="t-time" style={{ marginBottom: 0 }}>{fmtTime(ev.ts)}</span>
+            <button className="t-del" onClick={() => setTodayEntries(todayEntries.filter(e => e.id !== ev.id))}>&#10005;</button>
+          </div>
+          <span className="t-text" style={{ paddingRight: 0 }}>{ev.text}</span>
         </div>
       )
     }
 
     if (ev.type === 'project') return (
       <div key={ev.projectId}>
-        <div className="t-row" style={{ background: paleTint(ev.projectColour || '#475569'), cursor: 'pointer' }}
+        <div className="t-row" style={{ background: paleTint(ev.projectColour || '#475569'), cursor: 'pointer', flexDirection: 'column', alignItems: 'stretch', gap: 2, padding: '5px 10px 7px' }}
           onClick={() => setExpandedSess(p => ({ ...p, ['proj-' + ev.projectId]: !p['proj-' + ev.projectId] }))}>
-          <span className="t-time" style={{ color: ev.projectColour }}>{fmtTime(ev.ts)}</span>
-          <span className="t-text">
-            <span style={{ fontWeight: 700, color: ev.projectColour }}>{ev.projectName}</span>
-            {" · Project"}
-            {ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' thing' + (ev.entries.length === 1 ? '' : 's') : ''}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span className="t-time" style={{ color: ev.projectColour }}>
+              <span style={{ fontWeight: 800 }}>{ev.projectName}</span>{" · "}{fmtTime(ev.ts)}
+            </span>
+            {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['proj-' + ev.projectId] ? '▲' : '▼'}</span>}
+          </div>
+          <span className="t-text" style={{ paddingRight: 0 }}>
+            Project{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' thing' + (ev.entries.length === 1 ? '' : 's') : ''}
           </span>
-          {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['proj-' + ev.projectId] ? '▲' : '▼'}</span>}
         </div>
         {expandedSess['proj-' + ev.projectId] && ev.entries?.map((e, j) => (
           <div key={j} className="t-sub-row">· {e.label}</div>
@@ -222,11 +227,13 @@ export default function HomeTab({
 
     if (ev.type === 'pause') return (
       <div key={ev.sessionId}>
-        <div className="t-row" style={{ background: paleTint(btnColours.enjoy), cursor: 'pointer' }}
+        <div className="t-row" style={{ background: paleTint(btnColours.enjoy), cursor: 'pointer', flexDirection: 'column', alignItems: 'stretch', gap: 2, padding: '5px 10px 7px' }}
           onClick={() => setExpandedSess(p => ({ ...p, [ev.sessionId]: !p[ev.sessionId] }))}>
-          <span className="t-time">{fmtTime(ev.ts)}</span>
-          <span className="t-text">Enjoyed now{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
-          {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess[ev.sessionId] ? '▲' : '▼'}</span>}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span className="t-time">{fmtTime(ev.ts)}</span>
+            {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess[ev.sessionId] ? '▲' : '▼'}</span>}
+          </div>
+          <span className="t-text" style={{ paddingRight: 0 }}>Enjoyed now{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
         </div>
         {expandedSess[ev.sessionId] && ev.entries?.map((e, j) => (
           <div key={j} className="t-sub-row">· {e.text}</div>
@@ -235,19 +242,21 @@ export default function HomeTab({
     )
 
     if (ev.type === 'med') return (
-      <div key={ev.id} className="t-row" style={{ background: paleTint(btnColours.med) }}>
+      <div key={ev.id} className="t-row" style={{ background: paleTint(btnColours.med), flexDirection: 'column', alignItems: 'stretch', gap: 2, padding: '5px 10px 7px' }}>
         <span className="t-time">{fmtTime(ev.ts)}</span>
-        <span className="t-text">Meditation · {ev.duration} mins</span>
+        <span className="t-text" style={{ paddingRight: 0 }}>Meditation · {ev.duration} mins</span>
       </div>
     )
 
     if (ev.type === 'insp') return (
       <div key={ev.sessionId || i}>
-        <div className="t-row" style={{ background: paleTint(btnColours.achieve), cursor: 'pointer' }}
+        <div className="t-row" style={{ background: paleTint(btnColours.achieve), cursor: 'pointer', flexDirection: 'column', alignItems: 'stretch', gap: 2, padding: '5px 10px 7px' }}
           onClick={() => setExpandedSess(p => ({ ...p, ['insp-' + ev.sessionId]: !p['insp-' + ev.sessionId] }))}>
-          <span className="t-time">{fmtTime(ev.ts)}</span>
-          <span className="t-text">Achievement{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
-          {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['insp-' + ev.sessionId] ? '▲' : '▼'}</span>}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span className="t-time">{fmtTime(ev.ts)}</span>
+            {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['insp-' + ev.sessionId] ? '▲' : '▼'}</span>}
+          </div>
+          <span className="t-text" style={{ paddingRight: 0 }}>Achievement{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
         </div>
         {expandedSess['insp-' + ev.sessionId] && ev.entries?.map((e, j) => (
           <div key={j} className="t-sub-row">· {e.text}</div>
@@ -257,11 +266,13 @@ export default function HomeTab({
 
     if (ev.type === 'plan') return (
       <div key={ev.sessionId || i}>
-        <div className="t-row" style={{ background: paleTint(btnColours.plan), cursor: 'pointer' }}
+        <div className="t-row" style={{ background: paleTint(btnColours.plan), cursor: 'pointer', flexDirection: 'column', alignItems: 'stretch', gap: 2, padding: '5px 10px 7px' }}
           onClick={() => setExpandedSess(p => ({ ...p, ['plan-' + ev.sessionId]: !p['plan-' + ev.sessionId] }))}>
-          <span className="t-time">{fmtTime(ev.ts)}</span>
-          <span className="t-text">Planning{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
-          {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['plan-' + ev.sessionId] ? '▲' : '▼'}</span>}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span className="t-time">{fmtTime(ev.ts)}</span>
+            {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['plan-' + ev.sessionId] ? '▲' : '▼'}</span>}
+          </div>
+          <span className="t-text" style={{ paddingRight: 0 }}>Planning{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
         </div>
         {expandedSess['plan-' + ev.sessionId] && ev.entries?.map((e, j) => (
           <div key={j} className="t-sub-row">· {e.text}</div>
@@ -271,11 +282,13 @@ export default function HomeTab({
 
     if (ev.type === 'highlights') return (
       <div key={ev.sessionId || i}>
-        <div className="t-row" style={{ background: paleTint(btnColours.highlights), cursor: 'pointer' }}
+        <div className="t-row" style={{ background: paleTint(btnColours.highlights), cursor: 'pointer', flexDirection: 'column', alignItems: 'stretch', gap: 2, padding: '5px 10px 7px' }}
           onClick={() => setExpandedSess(p => ({ ...p, ['hl-' + ev.sessionId]: !p['hl-' + ev.sessionId] }))}>
-          <span className="t-time">{fmtTime(ev.ts)}</span>
-          <span className="t-text">Highlights{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
-          {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['hl-' + ev.sessionId] ? '▲' : '▼'}</span>}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span className="t-time">{fmtTime(ev.ts)}</span>
+            {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['hl-' + ev.sessionId] ? '▲' : '▼'}</span>}
+          </div>
+          <span className="t-text" style={{ paddingRight: 0 }}>Highlights{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
         </div>
         {expandedSess['hl-' + ev.sessionId] && ev.entries?.map((e, j) => (
           <div key={j} className="t-sub-row">· {e.text}</div>
@@ -285,11 +298,13 @@ export default function HomeTab({
 
     if (ev.type === 'physical') return (
       <div key={ev.sessionId || i}>
-        <div className="t-row" style={{ background: paleTint(btnColours.physical), cursor: 'pointer' }}
+        <div className="t-row" style={{ background: paleTint(btnColours.physical), cursor: 'pointer', flexDirection: 'column', alignItems: 'stretch', gap: 2, padding: '5px 10px 7px' }}
           onClick={() => setExpandedSess(p => ({ ...p, ['phys-' + ev.sessionId]: !p['phys-' + ev.sessionId] }))}>
-          <span className="t-time">{fmtTime(ev.ts)}</span>
-          <span className="t-text">Physical{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
-          {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['phys-' + ev.sessionId] ? '▲' : '▼'}</span>}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span className="t-time">{fmtTime(ev.ts)}</span>
+            {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['phys-' + ev.sessionId] ? '▲' : '▼'}</span>}
+          </div>
+          <span className="t-text" style={{ paddingRight: 0 }}>Physical{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
         </div>
         {expandedSess['phys-' + ev.sessionId] && ev.entries?.map((e, j) => (
           <div key={j} className="t-sub-row">· {e.text}</div>
@@ -298,16 +313,16 @@ export default function HomeTab({
     )
 
     if (ev.type === 'note') return (
-      <div key={ev.id || i} className="t-row" style={{ background: paleTint(btnColours.note) }}>
+      <div key={ev.id || i} className="t-row" style={{ background: paleTint(btnColours.note), flexDirection: 'column', alignItems: 'stretch', gap: 2, padding: '5px 10px 7px' }}>
         <span className="t-time">{fmtTime(ev.ts)}</span>
-        <span className="t-text">Note saved{ev.text ? ' · ' + ev.text : ''}</span>
+        <span className="t-text" style={{ paddingRight: 0 }}>Note saved{ev.text ? ' · ' + ev.text : ''}</span>
       </div>
     )
 
     if (ev.type === 'dream') return (
-      <div key={ev.id || i} className="t-row" style={{ background: paleTint(btnColours.dream) }}>
+      <div key={ev.id || i} className="t-row" style={{ background: paleTint(btnColours.dream), flexDirection: 'column', alignItems: 'stretch', gap: 2, padding: '5px 10px 7px' }}>
         <span className="t-time">{fmtTime(ev.ts)}</span>
-        <span className="t-text">Dream added{ev.text ? ' · ' + ev.text : ''}</span>
+        <span className="t-text" style={{ paddingRight: 0 }}>Dream added{ev.text ? ' · ' + ev.text : ''}</span>
       </div>
     )
 
@@ -488,11 +503,31 @@ export default function HomeTab({
 
         {/* Footer buttons */}
         <div className="home-footer">
-          <button className="now-btn btn-now"       onClick={() => openEnjoyNow('now')}>Enjoy Now</button>
-          <button className="now-btn btn-plan"       onClick={() => openStandalone('plan')}>Planning</button>
-          <button className="now-btn btn-highlights" onClick={() => { setActiveScreen('projects') }}>Projects</button>
-          <button className="now-btn btn-physical"   onClick={() => openStandalone('physical')}>Physical</button>
-          <button className="now-btn btn-insp"       onClick={() => openStandalone('insp')}>Highlights &amp; Achievements</button>
+          {(!btnConfig || btnConfig.enjoy?.visible !== false) && (
+            <button className="now-btn btn-now" onClick={() => openEnjoyNow('now')}>
+              {btnConfig?.enjoy?.label || "Enjoy Now"}
+            </button>
+          )}
+          {(!btnConfig || btnConfig.plan?.visible !== false) && (
+            <button className="now-btn btn-plan" onClick={() => openStandalone('plan')}>
+              {btnConfig?.plan?.label || "Planning"}
+            </button>
+          )}
+          {(!btnConfig || btnConfig.projects?.visible !== false) && (
+            <button className="now-btn btn-highlights" onClick={() => setActiveScreen('projects')}>
+              {btnConfig?.projects?.label || "Projects"}
+            </button>
+          )}
+          {(!btnConfig || btnConfig.physical?.visible !== false) && (
+            <button className="now-btn btn-physical" onClick={() => openStandalone('physical')}>
+              {btnConfig?.physical?.label || "Physical"}
+            </button>
+          )}
+          {(!btnConfig || btnConfig.insp?.visible !== false) && (
+            <button className="now-btn btn-insp" onClick={() => openStandalone('insp')}>
+              {btnConfig?.insp?.label || "Highlights & Achievements"}
+            </button>
+          )}
         </div>
       </div>
     </div>
