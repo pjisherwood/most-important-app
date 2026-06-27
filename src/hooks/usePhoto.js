@@ -44,6 +44,46 @@ export function deletePhoto(id) {
   } catch {}
 }
 
+// Silently describe a photo with Claude and store result in photoDesc
+export async function describePhotoAsync(photoId, dataUrl) {
+  try {
+    const apiKey = localStorage.getItem('mih-claude-key')
+    if (!apiKey) return
+    const base64 = dataUrl.split(',')[1]
+    const mediaType = dataUrl.startsWith('data:image/png') ? 'image/png' : 'image/jpeg'
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1024,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+            { type: 'text', text: 'Describe this image as a detailed factual record. Read all visible text exactly as written. Describe objects, people, colours, and setting. If you recognise a brand, place, or person, name it as an identification. Prioritise capturing all text completely.' },
+          ],
+        }],
+      }),
+    })
+    if (!res.ok) return
+    const data = await res.json()
+    const desc = data.content?.[0]?.text || ''
+    if (!desc) return
+    // Write description back to the photo entry
+    const photos = JSON.parse(localStorage.getItem(PHOTO_KEY) || '[]')
+    const updated = photos.map(p => p.id === photoId ? { ...p, photoDesc: desc } : p)
+    localStorage.setItem(PHOTO_KEY, JSON.stringify(updated))
+  } catch (e) {
+    console.warn('Photo description failed silently', e)
+  }
+}
+
 // Resize a File/Blob to 16:9 (480x270) and return a base64 JPEG string
 export function resizePhoto(file) {
   return new Promise((resolve, reject) => {
