@@ -4,6 +4,8 @@ import DetailScreen from './DetailScreen.jsx'
 import StandaloneScreen from './StandaloneScreen.jsx'
 import ProjectsScreen from './ProjectsScreen.jsx'
 import CameraButton, { PhotoThumb } from '../shared/CameraButton.jsx'
+import useVoice from '../../hooks/useVoice.js'
+import VoiceBar from '../shared/VoiceBar.jsx'
 import { loadPhotos, deletePhoto } from '../../hooks/usePhoto.js'
 import { uid, isToday, fmtTime, fmtHour, dayKey, paleTint } from '../../hooks/utils.js'
 import './Home.css'
@@ -38,6 +40,7 @@ export default function HomeTab({
   const [currentHlSess,    setCurrentHlSess]    = useState(null)
   const [currentPhysSess,  setCurrentPhysSess]  = useState(null)
   const [todayDraft, setTodayDraft] = useState('')
+  const voice = useVoice(setTodayDraft)
   const [recentPhotos, setRecentPhotos] = useState(() => loadPhotos())
 
   // Refresh photos when deleted from another screen (e.g. History)
@@ -450,38 +453,45 @@ export default function HomeTab({
 
           <div className="today-input-wrap">
             <span className="today-input-icon">✦</span>
-            <input
-              className="today-input"
-              value={todayDraft}
-              onChange={e => setTodayDraft(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter' && todayDraft.trim()) {
-                  logToday(todayDraft, e); setTodayDraft('')
-                }
-              }}
-              onPaste={async e => {
-                const items = e.clipboardData?.items || []
-                for (const item of items) {
-                  if (item.type.startsWith('image/')) {
-                    e.preventDefault()
-                    const file = item.getAsFile()
-                    if (file) {
-                      const { resizePhoto, savePhoto, describePhotoAsync } = await import('../../hooks/usePhoto.js')
-                      const dataUrl = await resizePhoto(file)
-                      const entry = savePhoto(dataUrl, { entryType: 'today' })
-                      describePhotoAsync(entry.id, dataUrl) // fire and forget
-                      setRecentPhotos(loadPhotos())
+            {voice.recording ? (
+              <VoiceBar recording bars={voice.bars} onDone={voice.done} onCancel={voice.cancel} />
+            ) : (
+              <>
+                <input
+                  className="today-input"
+                  value={todayDraft}
+                  onChange={e => setTodayDraft(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && todayDraft.trim()) {
+                      logToday(todayDraft, e); setTodayDraft('')
                     }
-                  }
-                }
-              }}
-              placeholder="A moment worth remembering…"
-            />
-            <CameraButton
-              entryType="today"
-              style={{ color: 'var(--accent)' }}
-              onSave={() => setRecentPhotos(loadPhotos())}
-            />
+                  }}
+                  onPaste={async e => {
+                    const items = e.clipboardData?.items || []
+                    for (const item of items) {
+                      if (item.type.startsWith('image/')) {
+                        e.preventDefault()
+                        const file = item.getAsFile()
+                        if (file) {
+                          const { resizePhoto, savePhoto, describePhotoAsync } = await import('../../hooks/usePhoto.js')
+                          const dataUrl = await resizePhoto(file)
+                          const entry = savePhoto(dataUrl, { entryType: 'today' })
+                          describePhotoAsync(entry.id, dataUrl)
+                          setRecentPhotos(loadPhotos())
+                        }
+                      }
+                    }
+                  }}
+                  placeholder="A moment worth remembering…"
+                />
+                <VoiceBar recording={false} bars={voice.bars} onStart={voice.start} compact />
+                <CameraButton
+                  entryType="today"
+                  style={{ color: 'var(--accent)' }}
+                  onSave={() => setRecentPhotos(loadPhotos())}
+                />
+              </>
+            )}
           </div>
 
           {todayTimeline.length === 0
