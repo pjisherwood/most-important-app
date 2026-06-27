@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { uid, isToday, fmtTime, fmtDateShort, dayKey } from '../../hooks/utils.js'
 import './Projects.css'
+import useVoice from '../../hooks/useVoice.js'
+import VoiceBar from '../shared/VoiceBar.jsx'
 
 // Palette for project colours — uses existing theme vars where possible
 const PROJECT_COLOURS = [
@@ -17,6 +19,7 @@ const PROJECT_COLOURS = [
 // ── Single project timeline screen ──────────────────────────────────────────
 function ProjectScreen({ project, onUpdate, onBack, onAddToday }) {
   const [draft,       setDraft]       = useState('')
+  const voice = useVoice(setDraft)
   const [editingName, setEditingName] = useState(false)
   const [nameVal,     setNameVal]     = useState(project.name)
   const [showColours, setShowColours] = useState(false)
@@ -128,14 +131,21 @@ function ProjectScreen({ project, onUpdate, onBack, onAddToday }) {
         {/* Entry input */}
         <div className="ds-input-wrap">
           <span style={{ fontSize: '0.85rem', opacity: 0.45 }}>📌</span>
-          <input
-            ref={inputRef}
-            className="ds-input"
-            value={draft}
-            onChange={e => setDraft(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); submit() } }}
-            placeholder="Log an update, milestone or note…"
-          />
+          {voice.recording ? (
+            <VoiceBar recording bars={voice.bars} onDone={voice.done} onCancel={voice.cancel} />
+          ) : (
+            <>
+              <input
+                ref={inputRef}
+                className="ds-input"
+                value={draft}
+                onChange={e => setDraft(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); submit() } }}
+                placeholder="Log an update, milestone or note…"
+              />
+              <VoiceBar recording={false} bars={voice.bars} onStart={voice.start} compact />
+            </>
+          )}
         </div>
 
         {/* Timeline grouped by day */}
