@@ -625,7 +625,7 @@ function ThemeEditor({ themeKey, onClose, onThemeChange }) {
 }
 
 // ── Main Settings Sheet ───────────────────────
-export default function SettingsSheet({ themeKey, setThemeKey, fontSizeKey, setFontSizeKey, onClose, onExport, onImport, onShowPrivacy }) {
+export default function SettingsSheet({ themeKey, setThemeKey, fontSizeKey, setFontSizeKey, onClose, onExport, onImport, onShowPrivacy, btnConfig, setBtnConfig, defaultBtnConfig }) {
   const [editingTheme, setEditingTheme] = useState(null)
   const sheetRef = useRef(null)
   const dragStartY = useRef(null)
@@ -728,6 +728,39 @@ export default function SettingsSheet({ themeKey, setThemeKey, fontSizeKey, setF
               ))}
             </div>
           </div>
+
+          {/* Button Config */}
+          {btnConfig && (
+            <div className="s-card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <div className="s-card-title" style={{ marginBottom: 0 }}>Home Buttons</div>
+                <button
+                  onClick={() => setBtnConfig(defaultBtnConfig)}
+                  style={{ fontSize: '0.65rem', fontFamily: 'var(--font-body)', fontWeight: 700, color: 'var(--accent)', background: 'var(--accent-soft)', border: 'none', borderRadius: 8, padding: '3px 8px', cursor: 'pointer', letterSpacing: '0.04em' }}
+                >Restore defaults</button>
+              </div>
+              {Object.entries(btnConfig).map(([key, cfg]) => (
+                <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, background: 'rgba(255,255,255,0.6)', borderRadius: 12, padding: '8px 10px' }}>
+                  {/* Visible toggle */}
+                  <div
+                    onClick={() => setBtnConfig({ ...btnConfig, [key]: { ...cfg, visible: !cfg.visible } })}
+                    style={{ width: 36, height: 20, borderRadius: 10, background: cfg.visible ? 'var(--accent)' : 'rgba(0,0,0,0.15)', position: 'relative', cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0 }}
+                  >
+                    <div style={{ position: 'absolute', top: 2, left: cfg.visible ? 18 : 2, width: 16, height: 16, borderRadius: '50%', background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
+                  </div>
+                  {/* Label input */}
+                  <input
+                    value={cfg.label}
+                    onChange={e => setBtnConfig({ ...btnConfig, [key]: { ...cfg, label: e.target.value } })}
+                    style={{ flex: 1, border: 'none', borderBottom: '1.5px solid var(--border)', background: 'transparent', fontFamily: 'var(--font-body)', fontSize: '0.8rem', fontWeight: 600, color: cfg.visible ? 'var(--text-hi)' : 'var(--text-lo)', padding: '2px 0', outline: 'none' }}
+                  />
+                </div>
+              ))}
+              <div style={{ fontSize: '0.65rem', color: 'var(--text-lo)', fontFamily: 'var(--font-body)', marginTop: 4, lineHeight: 1.4 }}>
+                Toggle buttons on/off · Tap a name to rename it
+              </div>
+            </div>
+          )}
 
           {/* Data */}
           <div className="s-card">
