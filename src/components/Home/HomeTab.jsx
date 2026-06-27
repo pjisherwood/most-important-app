@@ -466,9 +466,10 @@ export default function HomeTab({
                     e.preventDefault()
                     const file = item.getAsFile()
                     if (file) {
-                      const { resizePhoto, savePhoto } = await import('../../hooks/usePhoto.js')
+                      const { resizePhoto, savePhoto, describePhotoAsync } = await import('../../hooks/usePhoto.js')
                       const dataUrl = await resizePhoto(file)
-                      savePhoto(dataUrl, { entryType: 'today' })
+                      const entry = savePhoto(dataUrl, { entryType: 'today' })
+                      describePhotoAsync(entry.id, dataUrl) // fire and forget
                       setRecentPhotos(loadPhotos())
                     }
                   }
