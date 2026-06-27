@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
-import { savePhoto, resizePhoto, deletePhoto, loadPhotos } from '../../hooks/usePhoto.js'
+import { savePhoto, resizePhoto, deletePhoto, loadPhotos, describePhotoAsync } from '../../hooks/usePhoto.js'
 
 // ─────────────────────────────────────────────
 // LIGHTBOX — full-width tap-to-dismiss preview
@@ -179,6 +179,7 @@ function CameraScreen({ onClose, onSave, entryType }) {
     const dataUrl = canvas.toDataURL('image/jpeg', 0.65)
     streamRef.current?.getTracks().forEach(t => t.stop())
     const entry = savePhoto(dataUrl, { entryType })
+    describePhotoAsync(entry.id, dataUrl) // fire and forget
     setCapturing(false)
     onSave(entry)
     onClose()
@@ -192,6 +193,7 @@ function CameraScreen({ onClose, onSave, entryType }) {
       const dataUrl = await resizePhoto(file)
       streamRef.current?.getTracks().forEach(t => t.stop())
       const entry = savePhoto(dataUrl, { entryType })
+      describePhotoAsync(entry.id, dataUrl) // fire and forget
       onSave(entry)
       onClose()
     } catch {}
