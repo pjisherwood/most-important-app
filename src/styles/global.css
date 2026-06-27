@@ -493,7 +493,9 @@ body {
   color: var(--text-lo);
   opacity: 0.3;
   font-size: 0.72rem;
-  align-self: center;
+  align-self: flex-end;
+  padding: 0;
+  line-height: 1;
   transition: opacity 0.15s;
 }
 
