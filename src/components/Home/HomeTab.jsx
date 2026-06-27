@@ -195,29 +195,27 @@ export default function HomeTab({
     if (ev.type === 'today') {
       const bg = paleTint(btnColours.today)
       return (
-        <div key={ev.id} className="t-row" style={{ background: bg, flexDirection: 'column', alignItems: 'stretch', gap: 2, padding: '5px 10px 7px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span className="t-time" style={{ marginBottom: 0 }}>{fmtTime(ev.ts)}</span>
+        <div key={ev.id} className="t-row" style={{ background: bg, alignItems: 'stretch', gap: 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'space-between', flexShrink: 0, minWidth: 38, paddingRight: 6 }}>
+            <span className="t-time">{fmtTime(ev.ts)}</span>
             <button className="t-del" onClick={() => setTodayEntries(todayEntries.filter(e => e.id !== ev.id))}>&#10005;</button>
           </div>
-          <span className="t-text" style={{ paddingRight: 0 }}>{ev.text}</span>
+          <span className="t-text" style={{ flex: 1 }}>{ev.text}</span>
         </div>
       )
     }
 
     if (ev.type === 'project') return (
       <div key={ev.projectId}>
-        <div className="t-row" style={{ background: paleTint(ev.projectColour || '#475569'), cursor: 'pointer', flexDirection: 'column', alignItems: 'stretch', gap: 2, padding: '5px 10px 7px' }}
+        <div className="t-row" style={{ background: paleTint(ev.projectColour || '#475569'), cursor: 'pointer' }}
           onClick={() => setExpandedSess(p => ({ ...p, ['proj-' + ev.projectId]: !p['proj-' + ev.projectId] }))}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span className="t-time" style={{ color: ev.projectColour }}>
-              <span style={{ fontWeight: 800 }}>{ev.projectName}</span>{" · "}{fmtTime(ev.ts)}
-            </span>
-            {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['proj-' + ev.projectId] ? '▲' : '▼'}</span>}
-          </div>
-          <span className="t-text" style={{ paddingRight: 0 }}>
+          <span className="t-time" style={{ color: ev.projectColour }}>
+            <span style={{ fontWeight: 800 }}>{ev.projectName}</span>{" · "}{fmtTime(ev.ts)}
+          </span>
+          <span className="t-text">
             Project{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' thing' + (ev.entries.length === 1 ? '' : 's') : ''}
           </span>
+          {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['proj-' + ev.projectId] ? '▲' : '▼'}</span>}
         </div>
         {expandedSess['proj-' + ev.projectId] && ev.entries?.map((e, j) => (
           <div key={j} className="t-sub-row">· {e.label}</div>
@@ -227,13 +225,11 @@ export default function HomeTab({
 
     if (ev.type === 'pause') return (
       <div key={ev.sessionId}>
-        <div className="t-row" style={{ background: paleTint(btnColours.enjoy), cursor: 'pointer', flexDirection: 'column', alignItems: 'stretch', gap: 2, padding: '5px 10px 7px' }}
+        <div className="t-row" style={{ background: paleTint(btnColours.enjoy), cursor: 'pointer' }}
           onClick={() => setExpandedSess(p => ({ ...p, [ev.sessionId]: !p[ev.sessionId] }))}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span className="t-time">{fmtTime(ev.ts)}</span>
-            {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess[ev.sessionId] ? '▲' : '▼'}</span>}
-          </div>
-          <span className="t-text" style={{ paddingRight: 0 }}>Enjoyed now{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
+          <span className="t-time">{fmtTime(ev.ts)}</span>
+          <span className="t-text">Enjoyed now{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
+          {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess[ev.sessionId] ? '▲' : '▼'}</span>}
         </div>
         {expandedSess[ev.sessionId] && ev.entries?.map((e, j) => (
           <div key={j} className="t-sub-row">· {e.text}</div>
@@ -242,21 +238,19 @@ export default function HomeTab({
     )
 
     if (ev.type === 'med') return (
-      <div key={ev.id} className="t-row" style={{ background: paleTint(btnColours.med), flexDirection: 'column', alignItems: 'stretch', gap: 2, padding: '5px 10px 7px' }}>
+      <div key={ev.id} className="t-row" style={{ background: paleTint(btnColours.med) }}>
         <span className="t-time">{fmtTime(ev.ts)}</span>
-        <span className="t-text" style={{ paddingRight: 0 }}>Meditation · {ev.duration} mins</span>
+        <span className="t-text">Meditation · {ev.duration} mins</span>
       </div>
     )
 
     if (ev.type === 'insp') return (
       <div key={ev.sessionId || i}>
-        <div className="t-row" style={{ background: paleTint(btnColours.achieve), cursor: 'pointer', flexDirection: 'column', alignItems: 'stretch', gap: 2, padding: '5px 10px 7px' }}
+        <div className="t-row" style={{ background: paleTint(btnColours.achieve), cursor: 'pointer' }}
           onClick={() => setExpandedSess(p => ({ ...p, ['insp-' + ev.sessionId]: !p['insp-' + ev.sessionId] }))}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span className="t-time">{fmtTime(ev.ts)}</span>
-            {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['insp-' + ev.sessionId] ? '▲' : '▼'}</span>}
-          </div>
-          <span className="t-text" style={{ paddingRight: 0 }}>Achievement{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
+          <span className="t-time">{fmtTime(ev.ts)}</span>
+          <span className="t-text">Achievement{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
+          {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['insp-' + ev.sessionId] ? '▲' : '▼'}</span>}
         </div>
         {expandedSess['insp-' + ev.sessionId] && ev.entries?.map((e, j) => (
           <div key={j} className="t-sub-row">· {e.text}</div>
@@ -266,13 +260,11 @@ export default function HomeTab({
 
     if (ev.type === 'plan') return (
       <div key={ev.sessionId || i}>
-        <div className="t-row" style={{ background: paleTint(btnColours.plan), cursor: 'pointer', flexDirection: 'column', alignItems: 'stretch', gap: 2, padding: '5px 10px 7px' }}
+        <div className="t-row" style={{ background: paleTint(btnColours.plan), cursor: 'pointer' }}
           onClick={() => setExpandedSess(p => ({ ...p, ['plan-' + ev.sessionId]: !p['plan-' + ev.sessionId] }))}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span className="t-time">{fmtTime(ev.ts)}</span>
-            {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['plan-' + ev.sessionId] ? '▲' : '▼'}</span>}
-          </div>
-          <span className="t-text" style={{ paddingRight: 0 }}>Planning{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
+          <span className="t-time">{fmtTime(ev.ts)}</span>
+          <span className="t-text">Planning{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
+          {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['plan-' + ev.sessionId] ? '▲' : '▼'}</span>}
         </div>
         {expandedSess['plan-' + ev.sessionId] && ev.entries?.map((e, j) => (
           <div key={j} className="t-sub-row">· {e.text}</div>
@@ -282,13 +274,11 @@ export default function HomeTab({
 
     if (ev.type === 'highlights') return (
       <div key={ev.sessionId || i}>
-        <div className="t-row" style={{ background: paleTint(btnColours.highlights), cursor: 'pointer', flexDirection: 'column', alignItems: 'stretch', gap: 2, padding: '5px 10px 7px' }}
+        <div className="t-row" style={{ background: paleTint(btnColours.highlights), cursor: 'pointer' }}
           onClick={() => setExpandedSess(p => ({ ...p, ['hl-' + ev.sessionId]: !p['hl-' + ev.sessionId] }))}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span className="t-time">{fmtTime(ev.ts)}</span>
-            {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['hl-' + ev.sessionId] ? '▲' : '▼'}</span>}
-          </div>
-          <span className="t-text" style={{ paddingRight: 0 }}>Highlights{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
+          <span className="t-time">{fmtTime(ev.ts)}</span>
+          <span className="t-text">Highlights{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
+          {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['hl-' + ev.sessionId] ? '▲' : '▼'}</span>}
         </div>
         {expandedSess['hl-' + ev.sessionId] && ev.entries?.map((e, j) => (
           <div key={j} className="t-sub-row">· {e.text}</div>
@@ -298,13 +288,11 @@ export default function HomeTab({
 
     if (ev.type === 'physical') return (
       <div key={ev.sessionId || i}>
-        <div className="t-row" style={{ background: paleTint(btnColours.physical), cursor: 'pointer', flexDirection: 'column', alignItems: 'stretch', gap: 2, padding: '5px 10px 7px' }}
+        <div className="t-row" style={{ background: paleTint(btnColours.physical), cursor: 'pointer' }}
           onClick={() => setExpandedSess(p => ({ ...p, ['phys-' + ev.sessionId]: !p['phys-' + ev.sessionId] }))}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span className="t-time">{fmtTime(ev.ts)}</span>
-            {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['phys-' + ev.sessionId] ? '▲' : '▼'}</span>}
-          </div>
-          <span className="t-text" style={{ paddingRight: 0 }}>Physical{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
+          <span className="t-time">{fmtTime(ev.ts)}</span>
+          <span className="t-text">Physical{ev.entries?.length > 0 ? ' · ' + ev.entries.length + ' things' : ''}</span>
+          {ev.entries?.length > 0 && <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{expandedSess['phys-' + ev.sessionId] ? '▲' : '▼'}</span>}
         </div>
         {expandedSess['phys-' + ev.sessionId] && ev.entries?.map((e, j) => (
           <div key={j} className="t-sub-row">· {e.text}</div>
@@ -313,16 +301,16 @@ export default function HomeTab({
     )
 
     if (ev.type === 'note') return (
-      <div key={ev.id || i} className="t-row" style={{ background: paleTint(btnColours.note), flexDirection: 'column', alignItems: 'stretch', gap: 2, padding: '5px 10px 7px' }}>
+      <div key={ev.id || i} className="t-row" style={{ background: paleTint(btnColours.note) }}>
         <span className="t-time">{fmtTime(ev.ts)}</span>
-        <span className="t-text" style={{ paddingRight: 0 }}>Note saved{ev.text ? ' · ' + ev.text : ''}</span>
+        <span className="t-text">Note saved{ev.text ? ' · ' + ev.text : ''}</span>
       </div>
     )
 
     if (ev.type === 'dream') return (
-      <div key={ev.id || i} className="t-row" style={{ background: paleTint(btnColours.dream), flexDirection: 'column', alignItems: 'stretch', gap: 2, padding: '5px 10px 7px' }}>
+      <div key={ev.id || i} className="t-row" style={{ background: paleTint(btnColours.dream) }}>
         <span className="t-time">{fmtTime(ev.ts)}</span>
-        <span className="t-text" style={{ paddingRight: 0 }}>Dream added{ev.text ? ' · ' + ev.text : ''}</span>
+        <span className="t-text">Dream added{ev.text ? ' · ' + ev.text : ''}</span>
       </div>
     )
 
