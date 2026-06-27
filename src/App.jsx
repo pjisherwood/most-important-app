@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom'
+import RememberTab from './components/Remember/RememberTab.jsx'
 import { LS, KEYS } from './hooks/useStorage.js'
 import { loadPhotos } from './hooks/usePhoto.js'
 import { useAudio } from './hooks/useAudio.js'
@@ -395,6 +396,7 @@ export default function App() {
     { key: 'notes',    label: 'Notes',    icon: '✎' },
     { key: 'dreams',   label: 'Dreams',   icon: '✦' },
     { key: 'history',  label: 'History',  icon: '◷' },
+    { key: 'remember', label: 'Remember', icon: '◈' },
   ]
 
   const handlePrivacyDismiss = () => {
@@ -483,6 +485,10 @@ export default function App() {
           allTimeStreak={allTimeStreak}
           allEvents={allEvents}
         />
+      )}
+
+      {activeTab === 'remember' && (
+        <RememberTab />
       )}
 
       {createPortal(
