@@ -4,6 +4,8 @@ import CameraButton, { PhotoThumb } from '../shared/CameraButton.jsx'
 import { loadPhotos, deletePhoto } from '../../hooks/usePhoto.js'
 import StatsView from '../shared/StatsView.jsx'
 import WorkoutScreen from './WorkoutScreen.jsx'
+import useVoice from '../../hooks/useVoice.js'
+import VoiceBar from '../shared/VoiceBar.jsx'
 
 export default function StandaloneScreen({
   isActive, onBack,
@@ -14,6 +16,7 @@ export default function StandaloneScreen({
   savedWorkouts, setSavedWorkouts,
 }) {
   const [draft, setDraft] = useState('')
+  const voice = useVoice(setDraft)
   const [, setPhotoRefresh] = useState(0)
   const [showHistory, setShowHistory] = useState(false)
   const [activeTab, setActiveTab] = useState('entries')
@@ -154,19 +157,26 @@ export default function StandaloneScreen({
             )}
             <div className="ds-input-wrap">
               <span style={{ fontSize: '0.85rem', opacity: 0.45 }}>{icon}</span>
-              <input
-                ref={inputRef}
-                className="ds-input"
-                value={draft}
-                onChange={e => setDraft(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); submit() } }}
-                placeholder={placeholder}
-              />
-              <CameraButton
-                entryType={title}
-                style={{ color: 'var(--accent)' }}
-                onSave={() => setPhotoRefresh(n => n + 1)}
-              />
+              {voice.recording ? (
+                <VoiceBar recording bars={voice.bars} onDone={voice.done} onCancel={voice.cancel} />
+              ) : (
+                <>
+                  <input
+                    ref={inputRef}
+                    className="ds-input"
+                    value={draft}
+                    onChange={e => setDraft(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); submit() } }}
+                    placeholder={placeholder}
+                  />
+                  <VoiceBar recording={false} bars={voice.bars} onStart={voice.start} compact />
+                  <CameraButton
+                    entryType={title}
+                    style={{ color: 'var(--accent)' }}
+                    onSave={() => setPhotoRefresh(n => n + 1)}
+                  />
+                </>
+              )}
             </div>
 
             {(() => {
